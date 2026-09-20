@@ -10,7 +10,7 @@ A support-triage benchmark comparing TypeSafe Jev and OpenAI on the same LangGra
 ![LangGraph](https://img.shields.io/badge/Workflow-LangGraph-0E8C7E)
 ![24 labeled tickets](https://img.shields.io/badge/Dataset-24_labeled_tickets-BC5E22)
 
-[Quick start](#quick-start) · [Results](#what-this-experiment-tests) · [Architecture](#the-graph) · [HTML report](doc/index.html) · [Project layout](#layout)
+[Quick start](#quick-start) · [Results](#what-this-experiment-tests) · [Architecture](#the-graph) · [HTML report](docs/index.html) · [Project layout](#layout)
 
 </div>
 
@@ -35,7 +35,7 @@ that sends uncertain cases to a human.
 > gate caught none of its three routing errors. [Read the caveats](#caveats).
 
 To view the HTML report locally, run `uv run python -m http.server 8000` from the
-repository root and open [localhost:8000/doc/](http://localhost:8000/doc/).
+repository root and open [localhost:8000/docs/](http://localhost:8000/docs/).
 
 ## Why this experiment
 
@@ -333,7 +333,7 @@ Tune them against your own data and your own consequences.
 ## Layout
 
 ```text
-doc/
+docs/
   index.html            visual benchmark report
 src/agentbench/
   types.py              domain types, normalized judgment shapes
