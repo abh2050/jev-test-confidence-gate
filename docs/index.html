@@ -1,695 +1,55 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Jev vs GPT-4o mini: a 24-ticket LangGraph benchmark of latency, cost, accuracy, and confidence calibration.">
 <title>Confidence Gate</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
-
-<style>
-  :root {
-    --paper:      #F6F7F5;
-    --surface:    #FFFFFF;
-    --surface-2:  #EFF2F0;
-    --ink:        #14201E;
-    --ink-2:      #485653;
-    --ink-3:      #788582;
-    --rule:       #DCE2DF;
-    --rule-firm:  #C2CBC7;
-
-    --jev:        #0E8C7E;
-    --openai:     #BC5E22;
-    --caution:    #A23A2B;
-
-    /* Figure plates stay light in both themes, like a printed diagram.
-       Mermaid renders with its own default palette — dark marks on white —
-       and does not follow these tokens, so the plate is built to suit it. */
-    --panel:      #FFFFFF;
-    --panel-2:    #F2F4F2;
-    --panel-ink:  #14201E;
-    --panel-ink-2:#5D6A67;
-    --panel-rule: #D6DDD9;
-
-    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
-    --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
-
-    --measure: 68ch;
-    --gutter: 24px;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --paper:     #121716;
-      --surface:   #181E1D;
-      --surface-2: #1F2725;
-      --ink:       #E7ECEA;
-      --ink-2:     #A6B2AF;
-      --ink-3:     #76837F;
-      --rule:      #2A3331;
-      --rule-firm: #3C4643;
-
-      --jev:       #1AA593;
-      --openai:    #D27235;
-      --caution:   #D46A57;
-    }
-  }
-
-  :root[data-theme="dark"] {
-    --paper:     #121716;
-    --surface:   #181E1D;
-    --surface-2: #1F2725;
-    --ink:       #E7ECEA;
-    --ink-2:     #A6B2AF;
-    --ink-3:     #76837F;
-    --rule:      #2A3331;
-    --rule-firm: #3C4643;
-
-    --jev:       #1AA593;
-    --openai:    #D27235;
-    --caution:   #D46A57;
-  }
-
-  * { box-sizing: border-box; }
-
-  body {
-    margin: 0;
-    background: var(--paper);
-    color: var(--ink);
-    font-family: var(--serif);
-    font-size: 17px;
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  .wrap {
-    max-width: var(--measure);
-    margin: 0 auto;
-    padding-inline: var(--gutter);
-  }
-
-  .bleed {
-    max-width: 1080px;
-    margin: 0 auto;
-    padding-inline: var(--gutter);
-  }
-
-  /* ---------- type ---------- */
-
-  h1, h2, h3, .eyebrow, .mono, table, .chip, .metric { font-family: var(--mono); }
-
-  h1 {
-    font-size: clamp(2rem, 6vw, 3.1rem);
-    font-weight: 600;
-    letter-spacing: -0.03em;
-    line-height: 1.04;
-    margin: 0;
-    text-wrap: balance;
-  }
-
-  h2 {
-    font-size: 1.15rem;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    margin: 0 0 4px;
-    text-wrap: balance;
-  }
-
-  h3 {
-    font-size: 0.95rem;
-    font-weight: 600;
-    margin: 0 0 6px;
-    letter-spacing: -0.005em;
-  }
-
-  p { margin: 0 0 1.05em; }
-  p:last-child { margin-bottom: 0; }
-
-  a { color: inherit; text-decoration-color: var(--rule-firm); text-underline-offset: 3px; }
-  a:hover { text-decoration-color: currentColor; }
-
-  :focus-visible {
-    outline: 2px solid var(--jev);
-    outline-offset: 2px;
-    border-radius: 2px;
-  }
-
-  .eyebrow {
-    font-size: 0.7rem;
-    font-weight: 500;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-  }
-
-  code, .mono { font-family: var(--mono); font-size: 0.88em; }
-
-  code {
-    background: var(--surface-2);
-    padding: 1px 5px;
-    border-radius: 3px;
-  }
-
-  .lede {
-    font-size: 1.18rem;
-    line-height: 1.5;
-    color: var(--ink-2);
-    text-wrap: pretty;
-  }
-
-  /* ---------- header ---------- */
-
-  header.masthead {
-    border-bottom: 1px solid var(--rule);
-    padding-block: 56px 40px;
-  }
-
-  .repo {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 2px;
-    font-family: var(--mono);
-    font-size: 0.8rem;
-    color: var(--ink-3);
-    margin-bottom: 22px;
-  }
-  .repo b { color: var(--ink); font-weight: 600; }
-
-  .chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 26px;
-  }
-
-  .chip {
-    font-size: 0.72rem;
-    letter-spacing: 0.02em;
-    color: var(--ink-2);
-    border: 1px solid var(--rule);
-    background: var(--surface);
-    padding: 4px 9px;
-    border-radius: 2px;
-    white-space: nowrap;
-  }
-
-  /* ---------- sections ---------- */
-
-  section { padding-block: 44px; }
-  section + section { border-top: 1px solid var(--rule); }
-
-  .sec-head { margin-bottom: 22px; }
-  .sec-head .eyebrow { display: block; margin-bottom: 9px; }
-
-  /* ---------- verdict ---------- */
-
-  .verdicts {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-    gap: 1px;
-    background: var(--rule);
-    border: 1px solid var(--rule);
-  }
-
-  .verdict {
-    background: var(--surface);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 9px;
-  }
-
-  .grade {
-    font-family: var(--mono);
-    font-size: 0.68rem;
-    font-weight: 600;
-    letter-spacing: 0.16em;
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-  }
-  .grade::before {
-    content: "";
-    width: 9px; height: 9px;
-    border-radius: 50%;
-    background: currentColor;
-    flex: none;
-  }
-  .grade.solid { color: var(--jev); }
-  .grade.thin  { color: var(--ink-3); }
-  .grade.thin::before { background: transparent; border: 2px solid currentColor; }
-  .grade.null  { color: var(--caution); }
-  .grade.null::before {
-    background: transparent;
-    border: 2px solid currentColor;
-    border-radius: 0;
-    transform: rotate(45deg);
-    width: 8px; height: 8px;
-  }
-
-  .verdict .claim {
-    font-family: var(--mono);
-    font-size: 0.97rem;
-    font-weight: 500;
-    line-height: 1.35;
-    letter-spacing: -0.01em;
-  }
-
-  .verdict .why {
-    font-size: 0.92rem;
-    line-height: 1.5;
-    color: var(--ink-2);
-  }
-
-  /* ---------- hero figure ---------- */
-
-  .headline-stat {
-    display: flex;
-    align-items: baseline;
-    gap: 14px;
-    flex-wrap: wrap;
-    margin-bottom: 8px;
-  }
-  .headline-stat .figure {
-    font-family: var(--mono);
-    font-size: clamp(3rem, 12vw, 5rem);
-    font-weight: 600;
-    letter-spacing: -0.045em;
-    line-height: 0.9;
-    color: var(--jev);
-    font-variant-numeric: tabular-nums;
-  }
-  .headline-stat .unit {
-    font-family: var(--mono);
-    font-size: 0.95rem;
-    color: var(--ink-2);
-    max-width: 30ch;
-    line-height: 1.4;
-  }
-
-  /* ---------- chart ---------- */
-
-  .chart {
-    background: var(--surface);
-    border: 1px solid var(--rule);
-    padding: 22px;
-  }
-
-  .chart-title {
-    font-family: var(--mono);
-    font-size: 0.82rem;
-    font-weight: 600;
-    margin-bottom: 3px;
-  }
-  .chart-sub {
-    font-family: var(--mono);
-    font-size: 0.72rem;
-    color: var(--ink-3);
-    margin-bottom: 18px;
-  }
-
-  .legend {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
-    font-family: var(--mono);
-    font-size: 0.74rem;
-    color: var(--ink-2);
-  }
-  .legend span { display: inline-flex; align-items: center; gap: 7px; }
-  .legend i {
-    width: 11px; height: 11px;
-    border-radius: 2px;
-    display: inline-block;
-    flex: none;
-  }
-
-  .bar-group { margin-bottom: 20px; }
-  .bar-group:last-of-type { margin-bottom: 10px; }
-
-  .bar-group-label {
-    font-family: var(--mono);
-    font-size: 0.75rem;
-    color: var(--ink-2);
-    margin-bottom: 9px;
-  }
-
-  .bar-row {
-    display: grid;
-    grid-template-columns: 58px 1fr;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 2px; /* 2px surface gap between adjacent bars */
-  }
-  .bar-row:last-child { margin-bottom: 0; }
-
-  .bar-name {
-    font-family: var(--mono);
-    font-size: 0.72rem;
-    color: var(--ink-2);
-    text-align: right;
-  }
-
-  .bar-track {
-    position: relative;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .bar-fill {
-    height: 13px;
-    border-radius: 0 4px 4px 0; /* rounded data-end, anchored at baseline */
-    flex: none;
-    transition: filter 120ms ease;
-  }
-  .bar-row:hover .bar-fill { filter: brightness(1.12); }
-
-  .bar-value {
-    font-family: var(--mono);
-    font-size: 0.75rem;
-    font-weight: 500;
-    font-variant-numeric: tabular-nums;
-    color: var(--ink);
-    white-space: nowrap;
-  }
-
-  .axis {
-    position: relative;
-    height: 22px;
-    margin-left: 68px;
-    border-top: 1px solid var(--rule);
-    margin-top: 6px;
-  }
-  .tick {
-    position: absolute;
-    top: 0;
-    transform: translateX(-50%);
-    font-family: var(--mono);
-    font-size: 0.68rem;
-    color: var(--ink-3);
-    padding-top: 4px;
-    font-variant-numeric: tabular-nums;
-  }
-  .tick::before {
-    content: "";
-    position: absolute;
-    top: 0; left: 50%;
-    width: 1px; height: 4px;
-    background: var(--rule-firm);
-  }
-
-  /* ---------- table ---------- */
-
-  .table-scroll { overflow-x: auto; }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.82rem;
-    font-variant-numeric: tabular-nums;
-    background: var(--surface);
-  }
-
-  th, td {
-    padding: 9px 12px;
-    text-align: right;
-    border-bottom: 1px solid var(--rule);
-    white-space: nowrap;
-  }
-  th:first-child, td:first-child {
-    text-align: left;
-    white-space: normal;
-    min-width: 190px;
-  }
-
-  thead th {
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-    border-bottom: 1px solid var(--rule-firm);
-  }
-  thead th.eng-jev { color: var(--jev); }
-  thead th.eng-oai { color: var(--openai); }
-
-  tbody tr:hover { background: var(--surface-2); }
-
-  td.win { font-weight: 600; }
-  td.win::after {
-    content: "";
-    display: inline-block;
-    width: 5px; height: 5px;
-    border-radius: 50%;
-    margin-left: 7px;
-    vertical-align: 1px;
-    background: currentColor;
-  }
-  td.win-jev { color: var(--jev); }
-  td.win-oai { color: var(--openai); }
-
-  tr.group-head td {
-    font-family: var(--mono);
-    font-size: 0.68rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-    padding-top: 20px;
-    border-bottom: 1px solid var(--rule-firm);
-  }
-
-  tr.muted td:not(:first-child) { color: var(--ink-3); }
-
-  .table-note {
-    font-family: var(--mono);
-    font-size: 0.72rem;
-    color: var(--ink-3);
-    margin-top: 12px;
-    line-height: 1.5;
-  }
-
-  /* ---------- diagram panel ---------- */
-
-  .panel {
-    background: var(--panel);
-    border: 1px solid var(--panel-rule);
-    color: var(--panel-ink);
-    padding: 22px;
-  }
-
-  .panel-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 14px;
-    flex-wrap: wrap;
-    margin-bottom: 18px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--panel-rule);
-  }
-  .panel-head .t {
-    font-family: var(--mono);
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--panel-ink);
-  }
-  .panel-head .n {
-    font-family: var(--mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--panel-ink-2);
-  }
-
-  .mermaid-scroll { overflow-x: auto; }
-  pre.mermaid {
-    margin: 0;
-    background: transparent;
-    text-align: center;
-    min-width: 440px;
-  }
-
-  .panel-caption {
-    font-family: var(--mono);
-    font-size: 0.74rem;
-    line-height: 1.55;
-    color: var(--panel-ink-2);
-    margin-top: 16px;
-    padding-top: 14px;
-    border-top: 1px solid var(--panel-rule);
-  }
-
-  /* The plate keeps its own palette, so inline code inside it must too —
-     otherwise a dark-theme chip lands on the light plate. */
-  .panel code {
-    background: var(--panel-2);
-    color: var(--panel-ink);
-  }
-
-  /* ---------- split table (model vs code) ---------- */
-
-  .split {
-    border: 1px solid var(--rule);
-    background: var(--surface);
-  }
-  .split-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    border-bottom: 1px solid var(--rule);
-  }
-  .split-row:last-child { border-bottom: 0; }
-  .split-row > div { padding: 13px 16px; }
-  .split-row > div:first-child {
-    border-right: 1px solid var(--rule);
-    font-family: var(--mono);
-    font-size: 0.8rem;
-    color: var(--ink);
-  }
-  .split-row > div:last-child {
-    font-size: 0.92rem;
-    color: var(--ink-2);
-  }
-  .split-head > div {
-    font-family: var(--mono) !important;
-    font-size: 0.68rem !important;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--ink-3) !important;
-    background: var(--surface-2);
-  }
-
-  /* ---------- disagreements ---------- */
-
-  .cases { display: grid; gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
-  .case { background: var(--surface); padding: 18px; }
-  .case-id {
-    font-family: var(--mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.08em;
-    color: var(--ink-3);
-    margin-bottom: 7px;
-  }
-  .case-quote {
-    font-size: 0.98rem;
-    line-height: 1.45;
-    margin-bottom: 14px;
-    color: var(--ink);
-  }
-  .case-calls { display: flex; flex-wrap: wrap; gap: 8px; }
-  .call {
-    font-family: var(--mono);
-    font-size: 0.72rem;
-    padding: 5px 9px;
-    border: 1px solid var(--rule);
-    border-radius: 2px;
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-  }
-  .call b { font-weight: 600; }
-  .call .p { color: var(--ink-3); font-variant-numeric: tabular-nums; }
-  .call.jev { border-color: var(--jev); color: var(--jev); }
-  .call.oai { border-color: var(--openai); color: var(--openai); }
-  .call.gold { color: var(--ink-2); background: var(--surface-2); }
-
-  /* ---------- callout ---------- */
-
-  .callout {
-    border-left: 3px solid var(--caution);
-    padding: 2px 0 2px 18px;
-    margin: 22px 0;
-  }
-  .callout .eyebrow { color: var(--caution); display: block; margin-bottom: 7px; }
-
-  .readout {
-    background: var(--surface-2);
-    border: 1px solid var(--rule);
-    border-left: 3px solid var(--caution);
-    color: var(--ink);
-    font-family: var(--mono);
-    font-size: 0.8rem;
-    padding: 16px 18px;
-    display: grid;
-    gap: 7px;
-    margin: 20px 0;
-    overflow-x: auto;
-  }
-  .readout .k { color: var(--ink-3); }
-  .readout .v { color: var(--ink); font-weight: 500; }
-  .readout .row { display: flex; gap: 10px; justify-content: space-between; white-space: nowrap; }
-
-  /* ---------- footer ---------- */
-
-  footer {
-    border-top: 1px solid var(--rule);
-    padding-block: 34px 56px;
-    font-family: var(--mono);
-    font-size: 0.76rem;
-    color: var(--ink-3);
-    line-height: 1.7;
-  }
-
-  .theme-toggle {
-    position: fixed;
-    top: env(safe-area-inset-top, 0px);
-    right: 0;
-    margin: 12px;
-    z-index: 10;
-    font-family: var(--mono);
-    font-size: 0.68rem;
-    letter-spacing: 0.08em;
-    background: var(--surface);
-    color: var(--ink-2);
-    border: 1px solid var(--rule);
-    border-radius: 2px;
-    padding: 6px 10px;
-    cursor: pointer;
-  }
-  .theme-toggle:hover { color: var(--ink); border-color: var(--rule-firm); }
-
-  @media (max-width: 560px) {
-    body { font-size: 16px; }
-    .split-row { grid-template-columns: 1fr; }
-    .split-row > div:first-child { border-right: 0; border-bottom: 1px solid var(--rule); }
-    .split-head { display: none; }
-    .bar-row { grid-template-columns: 50px 1fr; }
-    .axis { margin-left: 60px; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    * { transition: none !important; animation: none !important; }
-  }
-</style>
-
-<button class="theme-toggle" id="themeToggle" type="button">THEME</button>
-
-<header class="masthead">
-  <div class="wrap">
-    <div class="repo"><b>confidence-gate</b>&nbsp;· experiment log</div>
-    <h1>Putting Jev's claims in a workflow</h1>
-    <p class="lede" style="margin-top:20px">
-      TypeSafe launched Jev as a <em>System One Model</em> — a frontier-intelligence
-      function call, state in and typed probabilistic decisions out — claiming two
-      orders of magnitude on speed and cost, and decisions carrying
-      <strong>calibrated</strong> probabilities where higher confidence really does
-      mean higher accuracy.
-    </p>
-    <p class="lede" style="margin-top:14px">
-      That last claim is the one that would change how you build. So this is a real
-      LangGraph triage system with a <code>gate</code> node whose only job is to act
-      on a confidence number — and a count of which claims survive contact with it.
-    </p>
-    <div class="chips">
-      <span class="chip">24 tickets</span>
-      <span class="chip">2 requests / ticket</span>
-      <span class="chip">jev-latest</span>
-      <span class="chip">vs gpt-4o-mini</span>
-      <span class="chip">LangGraph subgraphs</span>
-      <span class="chip">74 tests</span>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+
+<link rel="stylesheet" href="assets/report.css">
+
+</head>
+<body>
+<a class="skip-link" href="#scorecard">Skip to the report</a>
+<nav class="topbar" aria-label="Main navigation">
+  <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">c/g</span> confidence gate<span class="brand-tag">EXPERIMENT 001</span></a>
+  <div class="nav-actions"><a href="https://github.com/abh2050/jev-test-confidence-gate">View source ↗</a><button id="themeToggle" class="theme-toggle" type="button" aria-label="Switch to dark theme">Dark mode ◐</button></div>
+</nav>
+<header class="masthead" id="top">
+  <div class="hero-grid">
+    <div class="hero-copy">
+      <div class="hero-kicker"><span></span> THE CONFIDENCE EXPERIMENT <span class="issue">/ SEP 2026</span></div>
+      <h1>Fast is measurable.<br><em>Trust is harder.</em></h1>
+      <p class="lede">Jev promises fast decisions with calibrated confidence. We put it inside a real support workflow to see which claims hold up.</p>
+      <div class="hero-actions"><a class="button primary" href="#results">Explore the results <span>↓</span></a><a class="text-link" href="#architecture">See the architecture ↗</a></div>
+      <div class="chips"><span class="chip">24 labeled tickets</span><span class="chip">2 engines</span><span class="chip">1 LangGraph workflow</span></div>
     </div>
+    <aside class="hero-plate" aria-label="Benchmark at a glance">
+      <div class="plate-label"><span>TIME TO ROUTING DECISION</span><span class="live-dot">OBSERVED</span></div>
+      <div class="plate-number">163<span>ms</span></div>
+      <p class="plate-context">Jev · compared with 1,164 ms for GPT-4o mini</p>
+      <div class="mini-row"><span>Jev</span><div><i style="width:14%;background:#a9e6c3"></i></div><b>163 ms</b></div>
+      <div class="mini-row"><span>GPT-4o mini</span><div><i style="width:100%;background:#c9b3eb"></i></div><b>1,164 ms</b></div>
+      <div class="plate-rule"></div>
+      <div class="plate-bottom"><span>THE OPEN QUESTION</span><strong>Does confidence<br>predict correctness?</strong><a href="#calibration">The gate caught 0 of 3 errors ↗</a></div>
+    </aside>
   </div>
+  <div class="stat-strip">
+    <div><span class="stat-label">01 / SPEED</span><strong>7.1<span>×</span></strong><p>faster to a routing decision</p></div>
+    <div><span class="stat-label">02 / COST</span><strong>6.1<span>×</span></strong><p>cheaper per ticket at list price</p></div>
+    <div><span class="stat-label">03 / ACCURACY</span><strong>87.5<span>%</span></strong><p>department accuracy · Jev</p></div>
+    <div class="stat-caution"><span class="stat-label">04 / CALIBRATION</span><strong>0<span> / 3</span></strong><p>routing errors caught by the gate</p></div>
+  </div>
+  <p class="sample-note">A small, invented dataset. These are observations from one run, not a general ranking of model performance.</p>
 </header>
+<nav class="section-nav" aria-label="Report sections"><a href="#scorecard">Overview</a><a href="#setup">Method</a><a href="#architecture">Architecture</a><a href="#speed">Speed</a><a href="#results">Results</a><a href="#calibration">Calibration</a></nav>
+<main>
 
-<section>
+
+<section id="scorecard">
   <div class="bleed">
     <div class="sec-head">
       <span class="eyebrow">TypeSafe's claims, checked against one real workload</span>
@@ -735,7 +95,7 @@
   </div>
 </section>
 
-<section>
+<section id="setup">
   <div class="wrap">
     <div class="sec-head">
       <span class="eyebrow">01 · The setup</span>
@@ -763,21 +123,21 @@
       </div>
       <div class="mermaid-scroll">
 <pre class="mermaid">
-flowchart LR
-  Q["questions.py<br/>one neutral spec"]
-  subgraph ENG["interchangeable"]
-    direction TB
-    J["JevEngine<br/>Choice · Noul · Score"]
-    O["OpenAIEngine<br/>strict JSON schema"]
+flowchart TD
+  Q[&quot;questions.py&lt;br/&gt;one neutral spec&quot;]
+  subgraph ENG[&quot;interchangeable&quot;]
+    direction LR
+    J[&quot;JevEngine&lt;br/&gt;Choice · Noul · Score&quot;]
+    O[&quot;OpenAIEngine&lt;br/&gt;strict JSON schema&quot;]
   end
-  N["normalized judgment<br/>value + probabilities"]
-  G["the graph<br/>identical either way"]
+  N[&quot;normalized judgment&lt;br/&gt;value + probabilities&quot;]
+  G[&quot;the graph&lt;br/&gt;identical either way&quot;]
 
-  Q --> J
-  Q --> O
-  J --> N
-  O --> N
-  N --> G
+  Q --&gt; J
+  Q --&gt; O
+  J --&gt; N
+  O --&gt; N
+  N --&gt; G
 </pre>
       </div>
       <p class="panel-caption">
@@ -788,7 +148,7 @@ flowchart LR
   </div>
 </section>
 
-<section>
+<section id="architecture">
   <div class="wrap">
     <div class="sec-head">
       <span class="eyebrow">02 · The system under test</span>
@@ -811,30 +171,30 @@ flowchart LR
       <div class="mermaid-scroll">
 <pre class="mermaid">
 flowchart TD
-  S(["start"]) --> T["triage<br/><small>5 parallel judgments · 1 request</small>"]
-  T --> GT{"gate<br/><small>code, not model</small>"}
+  S([&quot;start&quot;]) --&gt; T[&quot;triage&lt;br/&gt;5 parallel judgments · 1 request&quot;]
+  T --&gt; GT{&quot;gate&lt;br/&gt;code, not model&quot;}
 
-  GT -->|"confident"| B
-  GT -->|"confident"| TE
-  GT -->|"uncertain → human"| E
+  GT --&gt;|&quot;confident&quot;| B
+  GT --&gt;|&quot;confident&quot;| TE
+  GT --&gt;|&quot;uncertain → human&quot;| E
 
-  subgraph B["billing"]
+  subgraph B[&quot;billing&quot;]
     direction TB
-    B1["assess"] --> B2["decide<br/><small>refund + approval</small>"]
+    B1[&quot;assess&quot;] --&gt; B2[&quot;decide&lt;br/&gt;refund + approval&quot;]
   end
-  subgraph TE["technical"]
+  subgraph TE[&quot;technical&quot;]
     direction TB
-    T1["assess"] --> T2["decide<br/><small>page on-call?</small>"]
+    T1[&quot;assess&quot;] --&gt; T2[&quot;decide&lt;br/&gt;page on-call?&quot;]
   end
-  subgraph E["escalation"]
+  subgraph E[&quot;escalation&quot;]
     direction TB
-    E1["assess"] --> E2["decide<br/><small>legal override</small>"]
+    E1[&quot;assess&quot;] --&gt; E2[&quot;decide&lt;br/&gt;legal override&quot;]
   end
 
-  B2 --> F["finalize<br/><small>SLA · usage</small>"]
-  T2 --> F
-  E2 --> F
-  F --> D(["end"])
+  B2 --&gt; F[&quot;finalize&lt;br/&gt;SLA · usage&quot;]
+  T2 --&gt; F
+  E2 --&gt; F
+  F --&gt; D([&quot;end&quot;])
 </pre>
       </div>
       <p class="panel-caption">
@@ -881,7 +241,7 @@ flowchart TD
   </div>
 </section>
 
-<section>
+<section id="speed">
   <div class="wrap">
     <div class="sec-head">
       <span class="eyebrow">03 · The claim that holds</span>
@@ -974,7 +334,7 @@ flowchart TD
   </div>
 </section>
 
-<section>
+<section id="cost">
   <div class="wrap">
     <div class="sec-head">
       <span class="eyebrow">04 · The claim that holds for a surprising reason</span>
@@ -1004,7 +364,7 @@ flowchart TD
   </div>
 </section>
 
-<section>
+<section id="results">
   <div class="bleed">
     <div class="sec-head">
       <span class="eyebrow">05 · Everything measured</span>
@@ -1122,7 +482,7 @@ flowchart TD
   </div>
 </section>
 
-<section>
+<section id="disagreements">
   <div class="wrap">
     <div class="sec-head">
       <span class="eyebrow">06 · Where they disagreed</span>
@@ -1167,7 +527,7 @@ flowchart TD
   </div>
 </section>
 
-<section>
+<section id="calibration">
   <div class="wrap">
     <div class="sec-head">
       <span class="eyebrow">07 · The claim that did not land</span>
@@ -1231,7 +591,7 @@ flowchart TD
   </div>
 </section>
 
-<section>
+<section id="next">
   <div class="wrap">
     <div class="sec-head">
       <span class="eyebrow">08 · What would settle it</span>
@@ -1264,6 +624,7 @@ flowchart TD
   </div>
 </section>
 
+</main>
 <footer>
   <div class="wrap">
     <strong style="color:var(--ink-2)">confidence-gate</strong><br>
@@ -1275,24 +636,7 @@ flowchart TD
   </div>
 </footer>
 
-<script>
-  (function () {
-    var btn = document.getElementById('themeToggle');
-    var root = document.documentElement;
-    function current() {
-      var explicit = root.getAttribute('data-theme');
-      if (explicit) return explicit;
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    try {
-      var saved = localStorage.getItem('cg-theme');
-      if (saved === 'dark' || saved === 'light') root.setAttribute('data-theme', saved);
-    } catch (e) { /* private mode, blocked storage — the page is fine without it */ }
-
-    btn.addEventListener('click', function () {
-      var next = current() === 'dark' ? 'light' : 'dark';
-      root.setAttribute('data-theme', next);
-      try { localStorage.setItem('cg-theme', next); } catch (e) {}
-    });
-  })();
-</script>
+<script src="assets/mermaid-11.12.0.min.js" defer></script>
+<script src="assets/report.js" defer></script>
+</body>
+</html>
