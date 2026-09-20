@@ -1,7 +1,43 @@
-# confidence-gate
+<div align="center">
 
-**A test of TypeSafe's published claims about Jev, run inside a realistic
-workflow rather than a demo.**
+# Confidence Gate
+
+**Can a model’s confidence tell you when to trust it?**
+
+A support-triage benchmark comparing TypeSafe Jev and OpenAI on the same LangGraph workflow.
+
+![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
+![LangGraph](https://img.shields.io/badge/Workflow-LangGraph-0E8C7E)
+![24 labeled tickets](https://img.shields.io/badge/Dataset-24_labeled_tickets-BC5E22)
+
+[Quick start](#quick-start) · [Results](#what-this-experiment-tests) · [Architecture](#the-graph) · [HTML report](doc/index.html) · [Project layout](#layout)
+
+</div>
+
+---
+
+## At a glance
+
+One graph, one policy, two judgment engines. This experiment tests TypeSafe’s
+published claims about Jev in a support-triage workflow, with a confidence gate
+that sends uncertain cases to a human.
+
+| Observed in this run | Jev | OpenAI (`gpt-4o-mini`) |
+| :--- | ---: | ---: |
+| Time to routing decision | **163 ms** | 1,164 ms |
+| Department accuracy | **87.5%** | 75.0% |
+| Cost per 1,000 tickets | **$0.06** | $0.37 |
+| Routing errors caught by the gate | 0 of 3 | 0 of 6 |
+
+> [!IMPORTANT]
+> These results come from **24 invented tickets**. Jev was faster and cheaper in
+> this run, but the sample is too small to establish calibration. Its confidence
+> gate caught none of its three routing errors. [Read the caveats](#caveats).
+
+To view the HTML report locally, run `uv run python -m http.server 8000` from the
+repository root and open [localhost:8000/doc/](http://localhost:8000/doc/).
+
+## Why this experiment
 
 TypeSafe launched Jev as a "System One Model": a frontier-intelligence function
 call, unstructured state in and typed probabilistic decisions out, claiming two
@@ -27,15 +63,25 @@ holds. The calibration claim — the one that matters most — is not demonstrat
 here, and this workload does not have the statistical power to test it properly.
 [Jump to the claims table.](#what-this-experiment-tests)
 
-## Setup
+## Quick start
+
+### 1. Install dependencies
+
+Requires **Python 3.11+** and **uv**.
 
 ```bash
 uv sync --extra dev
 ```
 
-Put both keys in `.env`:
+### 2. Configure API keys
 
+Copy `.env.example` to `.env`, then set both keys:
+
+```bash
+cp .env.example .env
 ```
+
+```dotenv
 TYPESAFE_API_KEY='apikey_...'
 OPENAI_API_KEY='sk-...'
 ```
@@ -46,7 +92,7 @@ how the console hands it out.
 Optional overrides: `TYPESAFE_DEFAULT_MODEL` (default `jev-latest`),
 `OPENAI_MODEL` (default `gpt-4o-mini`).
 
-## Usage
+### 3. Run the benchmark
 
 ```bash
 # compare both engines over the labeled set
@@ -66,29 +112,25 @@ uv run pytest
 
 ## The graph
 
-```
-        START
-          │
-      ┌───▼────┐   one request, five parallel judgments
-      │ triage │
-      └───┬────┘
-          │
-      ┌───▼────┐   confidence gate — ordinary code, no model
-      │  gate  │
-      └───┬────┘
-   ┌──────┼──────────┐
-   │      │          │
-┌──▼───┐┌─▼──────┐┌──▼────────┐   each is a compiled subgraph
-│billing││technical││escalation│   attached as a single node
-└──┬───┘└─┬──────┘└──┬────────┘
-   └──────┼──────────┘
-      ┌───▼──────┐
-      │ finalize │   SLA, usage rollup
-      └───┬──────┘
-         END
+```mermaid
+flowchart TD
+    start([START]) --> triage["Triage · five parallel judgments"]
+    triage --> gate{"Confidence gate"}
+    gate --> billing["Billing · assess → decide"]
+    gate --> technical["Technical · assess → decide"]
+    gate --> escalation["Escalation · assess → decide"]
+    billing --> finalize["Finalize · SLA and usage"]
+    technical --> finalize
+    escalation --> finalize
+    finalize --> finish([END])
+
+    style triage fill:#e0f2ee,stroke:#0e8c7e,color:#14201e
+    style gate fill:#fff0dc,stroke:#bc5e22,color:#14201e
+    style finalize fill:#e0f2ee,stroke:#0e8c7e,color:#14201e
 ```
 
-Each subgraph is `assess → decide`: `assess` asks the engine for judgments,
+The confidence gate is ordinary code. Each department is a compiled subgraph
+with two steps, `assess → decide`: `assess` asks the engine for judgments,
 `decide` turns them into an action with plain code.
 
 ### Where the model stops and code starts
@@ -290,7 +332,9 @@ Tune them against your own data and your own consequences.
 
 ## Layout
 
-```
+```text
+doc/
+  index.html            visual benchmark report
 src/agentbench/
   types.py              domain types, normalized judgment shapes
   config.py             .env loading
