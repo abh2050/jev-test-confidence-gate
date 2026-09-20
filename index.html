@@ -1,0 +1,1298 @@
+<title>Confidence Gate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+
+<style>
+  :root {
+    --paper:      #F6F7F5;
+    --surface:    #FFFFFF;
+    --surface-2:  #EFF2F0;
+    --ink:        #14201E;
+    --ink-2:      #485653;
+    --ink-3:      #788582;
+    --rule:       #DCE2DF;
+    --rule-firm:  #C2CBC7;
+
+    --jev:        #0E8C7E;
+    --openai:     #BC5E22;
+    --caution:    #A23A2B;
+
+    /* Figure plates stay light in both themes, like a printed diagram.
+       Mermaid renders with its own default palette — dark marks on white —
+       and does not follow these tokens, so the plate is built to suit it. */
+    --panel:      #FFFFFF;
+    --panel-2:    #F2F4F2;
+    --panel-ink:  #14201E;
+    --panel-ink-2:#5D6A67;
+    --panel-rule: #D6DDD9;
+
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+
+    --measure: 68ch;
+    --gutter: 24px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:     #121716;
+      --surface:   #181E1D;
+      --surface-2: #1F2725;
+      --ink:       #E7ECEA;
+      --ink-2:     #A6B2AF;
+      --ink-3:     #76837F;
+      --rule:      #2A3331;
+      --rule-firm: #3C4643;
+
+      --jev:       #1AA593;
+      --openai:    #D27235;
+      --caution:   #D46A57;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:     #121716;
+    --surface:   #181E1D;
+    --surface-2: #1F2725;
+    --ink:       #E7ECEA;
+    --ink-2:     #A6B2AF;
+    --ink-3:     #76837F;
+    --rule:      #2A3331;
+    --rule-firm: #3C4643;
+
+    --jev:       #1AA593;
+    --openai:    #D27235;
+    --caution:   #D46A57;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: var(--measure);
+    margin: 0 auto;
+    padding-inline: var(--gutter);
+  }
+
+  .bleed {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding-inline: var(--gutter);
+  }
+
+  /* ---------- type ---------- */
+
+  h1, h2, h3, .eyebrow, .mono, table, .chip, .metric { font-family: var(--mono); }
+
+  h1 {
+    font-size: clamp(2rem, 6vw, 3.1rem);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.04;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  h2 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0 0 4px;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0 0 6px;
+    letter-spacing: -0.005em;
+  }
+
+  p { margin: 0 0 1.05em; }
+  p:last-child { margin-bottom: 0; }
+
+  a { color: inherit; text-decoration-color: var(--rule-firm); text-underline-offset: 3px; }
+  a:hover { text-decoration-color: currentColor; }
+
+  :focus-visible {
+    outline: 2px solid var(--jev);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  .eyebrow {
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  code, .mono { font-family: var(--mono); font-size: 0.88em; }
+
+  code {
+    background: var(--surface-2);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  .lede {
+    font-size: 1.18rem;
+    line-height: 1.5;
+    color: var(--ink-2);
+    text-wrap: pretty;
+  }
+
+  /* ---------- header ---------- */
+
+  header.masthead {
+    border-bottom: 1px solid var(--rule);
+    padding-block: 56px 40px;
+  }
+
+  .repo {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 2px;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--ink-3);
+    margin-bottom: 22px;
+  }
+  .repo b { color: var(--ink); font-weight: 600; }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 26px;
+  }
+
+  .chip {
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+    color: var(--ink-2);
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    padding: 4px 9px;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  /* ---------- sections ---------- */
+
+  section { padding-block: 44px; }
+  section + section { border-top: 1px solid var(--rule); }
+
+  .sec-head { margin-bottom: 22px; }
+  .sec-head .eyebrow { display: block; margin-bottom: 9px; }
+
+  /* ---------- verdict ---------- */
+
+  .verdicts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+  }
+
+  .verdict {
+    background: var(--surface);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .grade {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .grade::before {
+    content: "";
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: currentColor;
+    flex: none;
+  }
+  .grade.solid { color: var(--jev); }
+  .grade.thin  { color: var(--ink-3); }
+  .grade.thin::before { background: transparent; border: 2px solid currentColor; }
+  .grade.null  { color: var(--caution); }
+  .grade.null::before {
+    background: transparent;
+    border: 2px solid currentColor;
+    border-radius: 0;
+    transform: rotate(45deg);
+    width: 8px; height: 8px;
+  }
+
+  .verdict .claim {
+    font-family: var(--mono);
+    font-size: 0.97rem;
+    font-weight: 500;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+  }
+
+  .verdict .why {
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+
+  /* ---------- hero figure ---------- */
+
+  .headline-stat {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .headline-stat .figure {
+    font-family: var(--mono);
+    font-size: clamp(3rem, 12vw, 5rem);
+    font-weight: 600;
+    letter-spacing: -0.045em;
+    line-height: 0.9;
+    color: var(--jev);
+    font-variant-numeric: tabular-nums;
+  }
+  .headline-stat .unit {
+    font-family: var(--mono);
+    font-size: 0.95rem;
+    color: var(--ink-2);
+    max-width: 30ch;
+    line-height: 1.4;
+  }
+
+  /* ---------- chart ---------- */
+
+  .chart {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 22px;
+  }
+
+  .chart-title {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+  .chart-sub {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--ink-3);
+    margin-bottom: 18px;
+  }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    font-family: var(--mono);
+    font-size: 0.74rem;
+    color: var(--ink-2);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .legend i {
+    width: 11px; height: 11px;
+    border-radius: 2px;
+    display: inline-block;
+    flex: none;
+  }
+
+  .bar-group { margin-bottom: 20px; }
+  .bar-group:last-of-type { margin-bottom: 10px; }
+
+  .bar-group-label {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--ink-2);
+    margin-bottom: 9px;
+  }
+
+  .bar-row {
+    display: grid;
+    grid-template-columns: 58px 1fr;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 2px; /* 2px surface gap between adjacent bars */
+  }
+  .bar-row:last-child { margin-bottom: 0; }
+
+  .bar-name {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--ink-2);
+    text-align: right;
+  }
+
+  .bar-track {
+    position: relative;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .bar-fill {
+    height: 13px;
+    border-radius: 0 4px 4px 0; /* rounded data-end, anchored at baseline */
+    flex: none;
+    transition: filter 120ms ease;
+  }
+  .bar-row:hover .bar-fill { filter: brightness(1.12); }
+
+  .bar-value {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .axis {
+    position: relative;
+    height: 22px;
+    margin-left: 68px;
+    border-top: 1px solid var(--rule);
+    margin-top: 6px;
+  }
+  .tick {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--ink-3);
+    padding-top: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .tick::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 50%;
+    width: 1px; height: 4px;
+    background: var(--rule-firm);
+  }
+
+  /* ---------- table ---------- */
+
+  .table-scroll { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    font-variant-numeric: tabular-nums;
+    background: var(--surface);
+  }
+
+  th, td {
+    padding: 9px 12px;
+    text-align: right;
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+  th:first-child, td:first-child {
+    text-align: left;
+    white-space: normal;
+    min-width: 190px;
+  }
+
+  thead th {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    border-bottom: 1px solid var(--rule-firm);
+  }
+  thead th.eng-jev { color: var(--jev); }
+  thead th.eng-oai { color: var(--openai); }
+
+  tbody tr:hover { background: var(--surface-2); }
+
+  td.win { font-weight: 600; }
+  td.win::after {
+    content: "";
+    display: inline-block;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    margin-left: 7px;
+    vertical-align: 1px;
+    background: currentColor;
+  }
+  td.win-jev { color: var(--jev); }
+  td.win-oai { color: var(--openai); }
+
+  tr.group-head td {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: 20px;
+    border-bottom: 1px solid var(--rule-firm);
+  }
+
+  tr.muted td:not(:first-child) { color: var(--ink-3); }
+
+  .table-note {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--ink-3);
+    margin-top: 12px;
+    line-height: 1.5;
+  }
+
+  /* ---------- diagram panel ---------- */
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--panel-rule);
+    color: var(--panel-ink);
+    padding: 22px;
+  }
+
+  .panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--panel-rule);
+  }
+  .panel-head .t {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--panel-ink);
+  }
+  .panel-head .n {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--panel-ink-2);
+  }
+
+  .mermaid-scroll { overflow-x: auto; }
+  pre.mermaid {
+    margin: 0;
+    background: transparent;
+    text-align: center;
+    min-width: 440px;
+  }
+
+  .panel-caption {
+    font-family: var(--mono);
+    font-size: 0.74rem;
+    line-height: 1.55;
+    color: var(--panel-ink-2);
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--panel-rule);
+  }
+
+  /* The plate keeps its own palette, so inline code inside it must too —
+     otherwise a dark-theme chip lands on the light plate. */
+  .panel code {
+    background: var(--panel-2);
+    color: var(--panel-ink);
+  }
+
+  /* ---------- split table (model vs code) ---------- */
+
+  .split {
+    border: 1px solid var(--rule);
+    background: var(--surface);
+  }
+  .split-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 1px solid var(--rule);
+  }
+  .split-row:last-child { border-bottom: 0; }
+  .split-row > div { padding: 13px 16px; }
+  .split-row > div:first-child {
+    border-right: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--ink);
+  }
+  .split-row > div:last-child {
+    font-size: 0.92rem;
+    color: var(--ink-2);
+  }
+  .split-head > div {
+    font-family: var(--mono) !important;
+    font-size: 0.68rem !important;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3) !important;
+    background: var(--surface-2);
+  }
+
+  /* ---------- disagreements ---------- */
+
+  .cases { display: grid; gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+  .case { background: var(--surface); padding: 18px; }
+  .case-id {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+    margin-bottom: 7px;
+  }
+  .case-quote {
+    font-size: 0.98rem;
+    line-height: 1.45;
+    margin-bottom: 14px;
+    color: var(--ink);
+  }
+  .case-calls { display: flex; flex-wrap: wrap; gap: 8px; }
+  .call {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    padding: 5px 9px;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .call b { font-weight: 600; }
+  .call .p { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .call.jev { border-color: var(--jev); color: var(--jev); }
+  .call.oai { border-color: var(--openai); color: var(--openai); }
+  .call.gold { color: var(--ink-2); background: var(--surface-2); }
+
+  /* ---------- callout ---------- */
+
+  .callout {
+    border-left: 3px solid var(--caution);
+    padding: 2px 0 2px 18px;
+    margin: 22px 0;
+  }
+  .callout .eyebrow { color: var(--caution); display: block; margin-bottom: 7px; }
+
+  .readout {
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--caution);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    padding: 16px 18px;
+    display: grid;
+    gap: 7px;
+    margin: 20px 0;
+    overflow-x: auto;
+  }
+  .readout .k { color: var(--ink-3); }
+  .readout .v { color: var(--ink); font-weight: 500; }
+  .readout .row { display: flex; gap: 10px; justify-content: space-between; white-space: nowrap; }
+
+  /* ---------- footer ---------- */
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-block: 34px 56px;
+    font-family: var(--mono);
+    font-size: 0.76rem;
+    color: var(--ink-3);
+    line-height: 1.7;
+  }
+
+  .theme-toggle {
+    position: fixed;
+    top: env(safe-area-inset-top, 0px);
+    right: 0;
+    margin: 12px;
+    z-index: 10;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    background: var(--surface);
+    color: var(--ink-2);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+  .theme-toggle:hover { color: var(--ink); border-color: var(--rule-firm); }
+
+  @media (max-width: 560px) {
+    body { font-size: 16px; }
+    .split-row { grid-template-columns: 1fr; }
+    .split-row > div:first-child { border-right: 0; border-bottom: 1px solid var(--rule); }
+    .split-head { display: none; }
+    .bar-row { grid-template-columns: 50px 1fr; }
+    .axis { margin-left: 60px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<button class="theme-toggle" id="themeToggle" type="button">THEME</button>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="repo"><b>confidence-gate</b>&nbsp;· experiment log</div>
+    <h1>Putting Jev's claims in a workflow</h1>
+    <p class="lede" style="margin-top:20px">
+      TypeSafe launched Jev as a <em>System One Model</em> — a frontier-intelligence
+      function call, state in and typed probabilistic decisions out — claiming two
+      orders of magnitude on speed and cost, and decisions carrying
+      <strong>calibrated</strong> probabilities where higher confidence really does
+      mean higher accuracy.
+    </p>
+    <p class="lede" style="margin-top:14px">
+      That last claim is the one that would change how you build. So this is a real
+      LangGraph triage system with a <code>gate</code> node whose only job is to act
+      on a confidence number — and a count of which claims survive contact with it.
+    </p>
+    <div class="chips">
+      <span class="chip">24 tickets</span>
+      <span class="chip">2 requests / ticket</span>
+      <span class="chip">jev-latest</span>
+      <span class="chip">vs gpt-4o-mini</span>
+      <span class="chip">LangGraph subgraphs</span>
+      <span class="chip">74 tests</span>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="bleed">
+    <div class="sec-head">
+      <span class="eyebrow">TypeSafe's claims, checked against one real workload</span>
+      <h2>The scorecard</h2>
+    </div>
+    <div class="verdicts">
+      <div class="verdict">
+        <span class="grade solid">Holds</span>
+        <span class="claim">70–500&nbsp;ms end to end</span>
+        <span class="why">163&nbsp;ms to a routing decision, 430&nbsp;ms p95 end to end — inside the claimed band, over the public internet from a laptop.</span>
+      </div>
+      <div class="verdict">
+        <span class="grade solid">Holds</span>
+        <span class="claim">Radically cheaper per decision</span>
+        <span class="why">6.1× cheaper per ticket at list price. Though not for the reason you'd guess — see below.</span>
+      </div>
+      <div class="verdict">
+        <span class="grade solid">Holds</span>
+        <span class="claim">Similar intelligence on System One tasks</span>
+        <span class="why">0.875 against 0.750 on departments. Same ballpark, Jev ahead — on a margin of 3 tickets.</span>
+      </div>
+      <div class="verdict">
+        <span class="grade thin">Can't say</span>
+        <span class="claim">40–200× faster than LLMs</span>
+        <span class="why">7.1× here — but against <code>gpt-4o-mini</code>, a small non-reasoning model. Their figure is against frontier reasoners. Not a contradiction.</span>
+      </div>
+      <div class="verdict">
+        <span class="grade thin">Can't say</span>
+        <span class="claim">Type-safe, cannot hallucinate</span>
+        <span class="why">Zero type errors in 48 calls — but OpenAI's strict JSON mode also had zero. This workload can't separate <em>guaranteed</em> from <em>reliable</em>.</span>
+      </div>
+      <div class="verdict">
+        <span class="grade null">Not demonstrated</span>
+        <span class="claim">Calibrated: higher confidence → higher accuracy</span>
+        <span class="why">The gate caught 0 of 3 errors. With 3 errors to work from this is untested at adequate power — not refuted, but not shown.</span>
+      </div>
+    </div>
+    <p style="margin-top:20px;font-size:0.95rem;color:var(--ink-2);max-width:68ch">
+      The last row is why this repo is named after the gate rather than the model. It
+      is the claim that would change how you build — and the one a 24-ticket workload
+      turns out to be worst at testing.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">01 · The setup</span>
+      <h2>Hold the graph fixed, swap the judgment</h2>
+    </div>
+    <p>
+      The premise is that a decision layer is a component, not a personality. Every
+      question — its wording, its rubric, its options — is defined once, engine-neutral.
+      Jev compiles those specs into System&nbsp;One primitives; the OpenAI engine compiles
+      the identical specs into a strict JSON schema plus the same rendered rubrics.
+      Nothing about the prompt differs between runs.
+    </p>
+    <p>
+      Everything downstream is ordinary code: thresholds, SLA clocks, refund limits,
+      the legal override. Both engines are judged against the same rules, so the only
+      variable is where the probabilities came from.
+    </p>
+  </div>
+
+  <div class="bleed" style="margin-top:26px">
+    <div class="panel">
+      <div class="panel-head">
+        <span class="t">The swap</span>
+        <span class="n">Fig. 1</span>
+      </div>
+      <div class="mermaid-scroll">
+<pre class="mermaid">
+flowchart LR
+  Q["questions.py<br/>one neutral spec"]
+  subgraph ENG["interchangeable"]
+    direction TB
+    J["JevEngine<br/>Choice · Noul · Score"]
+    O["OpenAIEngine<br/>strict JSON schema"]
+  end
+  N["normalized judgment<br/>value + probabilities"]
+  G["the graph<br/>identical either way"]
+
+  Q --> J
+  Q --> O
+  J --> N
+  O --> N
+  N --> G
+</pre>
+      </div>
+      <p class="panel-caption">
+        An engine implements one method — <code>ask(state, questions)</code> —
+        and returns typed values with probabilities. It never decides what the application does.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">02 · The system under test</span>
+      <h2>A supervisor and three subgraphs</h2>
+    </div>
+    <p>
+      One triage call asks five independent judgments in parallel over the same ticket.
+      A <code>gate</code> node then turns those probabilities into a branch — in plain
+      code, with no model involved — and the ticket enters one of three compiled
+      subgraphs, each attached to the parent as a single node.
+    </p>
+  </div>
+
+  <div class="bleed" style="margin-top:26px">
+    <div class="panel">
+      <div class="panel-head">
+        <span class="t">Graph topology</span>
+        <span class="n">Fig. 2</span>
+      </div>
+      <div class="mermaid-scroll">
+<pre class="mermaid">
+flowchart TD
+  S(["start"]) --> T["triage<br/><small>5 parallel judgments · 1 request</small>"]
+  T --> GT{"gate<br/><small>code, not model</small>"}
+
+  GT -->|"confident"| B
+  GT -->|"confident"| TE
+  GT -->|"uncertain → human"| E
+
+  subgraph B["billing"]
+    direction TB
+    B1["assess"] --> B2["decide<br/><small>refund + approval</small>"]
+  end
+  subgraph TE["technical"]
+    direction TB
+    T1["assess"] --> T2["decide<br/><small>page on-call?</small>"]
+  end
+  subgraph E["escalation"]
+    direction TB
+    E1["assess"] --> E2["decide<br/><small>legal override</small>"]
+  end
+
+  B2 --> F["finalize<br/><small>SLA · usage</small>"]
+  T2 --> F
+  E2 --> F
+  F --> D(["end"])
+</pre>
+      </div>
+      <p class="panel-caption">
+        The gate is the whole experiment in one node. An uncertain department choice is
+        not resolved by guessing — it routes to a human. That only works if the
+        confidence number means something.
+      </p>
+    </div>
+  </div>
+
+  <div class="wrap" style="margin-top:34px">
+    <h3>Where the model stops and code starts</h3>
+    <div class="split" style="margin-top:14px">
+      <div class="split-row split-head">
+        <div>Judgment — model</div>
+        <div>Decision — code</div>
+      </div>
+      <div class="split-row">
+        <div>department + probabilities</div>
+        <div>which subgraph runs, and whether confidence is high enough to trust it at all</div>
+      </div>
+      <div class="split-row">
+        <div>priority, 0–3 expected score</div>
+        <div>the SLA clock: 72h / 24h / 8h / 1h</div>
+      </div>
+      <div class="split-row">
+        <div>action + policy_exception</div>
+        <div>the refund amount, and whether a supervisor must approve it</div>
+      </div>
+      <div class="split-row">
+        <div>severity, data_loss_risk</div>
+        <div>whether to page on-call</div>
+      </div>
+      <div class="split-row">
+        <div>tier, legal_exposure</div>
+        <div>the legal override, which no weighted score can average away</div>
+      </div>
+    </div>
+    <p style="margin-top:16px;font-size:0.95rem;color:var(--ink-2)">
+      Two consequences. Changing the refund limit doesn't re-run inference — the
+      judgments are unchanged, only the policy reading them. And the model is never
+      asked what to <em>do</em>, only to describe the situation.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">03 · The claim that holds</span>
+      <h2>Time to decision</h2>
+    </div>
+    <div class="headline-stat">
+      <span class="figure">7.1×</span>
+      <span class="unit">faster to a routing decision<br>163&nbsp;ms vs 1164&nbsp;ms, mean of 24 tickets</span>
+    </div>
+    <p style="margin-top:22px">
+      Both engines make exactly two requests per ticket and ask exactly the same
+      questions. The difference is what comes back: typed judgments return a short
+      structured answer, where prompt-and-parse has to emit a JSON object token by
+      token. Five parallel questions cost one response either way — the responses just
+      aren't the same size.
+    </p>
+  </div>
+
+  <div class="bleed" style="margin-top:26px">
+    <div class="chart">
+      <div class="chart-title">Latency, milliseconds</div>
+      <div class="chart-sub">Lower is better · 24 tickets · shared scale</div>
+
+      <div class="legend">
+        <span><i style="background:var(--jev)"></i> jev-latest</span>
+        <span><i style="background:var(--openai)"></i> gpt-4o-mini</span>
+      </div>
+
+      <div class="bar-group">
+        <div class="bar-group-label">Time to decision — start until the ticket has somewhere to go</div>
+        <div class="bar-row" title="jev-latest — time to decision: 163.3 ms">
+          <span class="bar-name">jev</span>
+          <span class="bar-track">
+            <span class="bar-fill" style="width:5.4%;background:var(--jev)"></span>
+            <span class="bar-value">163.3</span>
+          </span>
+        </div>
+        <div class="bar-row" title="gpt-4o-mini — time to decision: 1164.4 ms">
+          <span class="bar-name">openai</span>
+          <span class="bar-track">
+            <span class="bar-fill" style="width:38.8%;background:var(--openai)"></span>
+            <span class="bar-value">1164.4</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="bar-group">
+        <div class="bar-group-label">End to end, p95 — including the subgraph's own call</div>
+        <div class="bar-row" title="jev-latest — end-to-end p95: 429.8 ms">
+          <span class="bar-name">jev</span>
+          <span class="bar-track">
+            <span class="bar-fill" style="width:14.3%;background:var(--jev)"></span>
+            <span class="bar-value">429.8</span>
+          </span>
+        </div>
+        <div class="bar-row" title="gpt-4o-mini — end-to-end p95: 2996.1 ms">
+          <span class="bar-name">openai</span>
+          <span class="bar-track">
+            <span class="bar-fill" style="width:99.9%;background:var(--openai)"></span>
+            <span class="bar-value">2996.1</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="axis">
+        <span class="tick" style="left:0">0</span>
+        <span class="tick" style="left:33.3%">1000</span>
+        <span class="tick" style="left:66.6%">2000</span>
+        <span class="tick" style="left:100%">3000</span>
+      </div>
+
+      <p class="table-note">
+        Graph overhead was 3.7&nbsp;ms and 3.6&nbsp;ms respectively — which is the number
+        that makes the rest of this page worth reading. The harness is not what's being
+        measured.
+      </p>
+    </div>
+  </div>
+
+  <div class="wrap" style="margin-top:38px">
+    <h3>One caveat on the multiple</h3>
+    <p style="font-size:0.95rem;color:var(--ink-2)">
+      TypeSafe claims 40–200×. This run shows 7.1×, and that is not a contradiction —
+      it's a comparator choice. <code>gpt-4o-mini</code> is a small, non-reasoning
+      model, about the fastest thing you could put on the other side of this
+      comparison. Their multiples are measured against frontier reasoning models. The
+      absolute number is the one to trust here: <strong>163&nbsp;ms</strong>, inside
+      their claimed 70–500&nbsp;ms band.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">04 · The claim that holds for a surprising reason</span>
+      <h2>Cost, and where the saving actually comes from</h2>
+    </div>
+    <div class="headline-stat">
+      <span class="figure">6.1×</span>
+      <span class="unit">cheaper per ticket at list price<br>$0.06 vs $0.37 per 1,000 tickets</span>
+    </div>
+
+    <p style="margin-top:22px">
+      The obvious story would be that parallel sampling means Jev emits far fewer
+      output tokens. It doesn't. <strong>The output token counts were nearly
+      identical</strong> — 4,573 against 4,487 across the same 48 requests.
+    </p>
+    <p>
+      The saving is on the price sheet, not the volume: output billed at zero, and
+      input at $0.042/MTok against $0.15. If you were expecting the architecture to
+      show up as a smaller response, it doesn't. It shows up on the invoice.
+    </p>
+
+    <div class="readout" style="border-left-color:var(--rule-firm)">
+      <div class="row"><span class="k">jev · 34,226 in + 4,573 out</span><span class="v">$0.00144</span></div>
+      <div class="row"><span class="k">openai · 40,750 in + 4,487 out</span><span class="v">$0.00880</span></div>
+      <div class="row"><span class="k">list prices, hand-entered</span><span class="v">see pricing.py</span></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="bleed">
+    <div class="sec-head">
+      <span class="eyebrow">05 · Everything measured</span>
+      <h2>Full results</h2>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Metric</th>
+            <th scope="col" class="eng-jev">jev-latest</th>
+            <th scope="col" class="eng-oai">gpt-4o-mini</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="group-head"><td colspan="3">Quality</td></tr>
+          <tr>
+            <td>Department accuracy ↑</td>
+            <td class="win win-jev">0.875</td>
+            <td>0.750</td>
+          </tr>
+          <tr>
+            <td>Priority MAE ↓</td>
+            <td class="win win-jev">0.549</td>
+            <td>0.646</td>
+          </tr>
+          <tr>
+            <td>needs_human accuracy ↑</td>
+            <td>0.583</td>
+            <td class="win win-oai">0.750</td>
+          </tr>
+
+          <tr class="group-head"><td colspan="3">Does the confidence mean anything?</td></tr>
+          <tr class="muted">
+            <td>Calibration error ↓</td>
+            <td>0.199</td>
+            <td>0.150</td>
+          </tr>
+          <tr class="muted">
+            <td>Confidence separation ↑</td>
+            <td>−0.010</td>
+            <td>−0.000</td>
+          </tr>
+          <tr>
+            <td>Abstention rate</td>
+            <td>0.083</td>
+            <td>0.000</td>
+          </tr>
+          <tr class="muted">
+            <td>Errors caught by gate ↑</td>
+            <td>0.000</td>
+            <td>0.000</td>
+          </tr>
+
+          <tr class="group-head"><td colspan="3">Speed</td></tr>
+          <tr>
+            <td>Time to decision, mean ↓</td>
+            <td class="win win-jev">163.3 ms</td>
+            <td>1164.4 ms</td>
+          </tr>
+          <tr>
+            <td>Time to decision, p95 ↓</td>
+            <td class="win win-jev">283.6 ms</td>
+            <td>1345.5 ms</td>
+          </tr>
+          <tr>
+            <td>End to end, mean ↓</td>
+            <td class="win win-jev">316.1 ms</td>
+            <td>2273.2 ms</td>
+          </tr>
+          <tr>
+            <td>End to end, p95 ↓</td>
+            <td class="win win-jev">429.8 ms</td>
+            <td>2996.1 ms</td>
+          </tr>
+          <tr class="muted">
+            <td>— of which engine</td>
+            <td>312.4 ms</td>
+            <td>2269.6 ms</td>
+          </tr>
+          <tr class="muted">
+            <td>— of which graph</td>
+            <td>3.7 ms</td>
+            <td>3.6 ms</td>
+          </tr>
+
+          <tr class="group-head"><td colspan="3">Cost</td></tr>
+          <tr>
+            <td>Input tokens ↓</td>
+            <td class="win win-jev">34,226</td>
+            <td>40,750</td>
+          </tr>
+          <tr class="muted">
+            <td>Output tokens</td>
+            <td>4,573</td>
+            <td>4,487</td>
+          </tr>
+          <tr>
+            <td>Cost / 1k tickets ↓</td>
+            <td class="win win-jev">$0.060</td>
+            <td>$0.367</td>
+          </tr>
+          <tr>
+            <td>Requests per ticket</td>
+            <td>2.00</td>
+            <td>2.00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">
+      Greyed rows are the ones this sample cannot support — see below. The two engines
+      agreed on 88% of departments and 88% of final routes.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">06 · Where they disagreed</span>
+      <h2>Three tickets, and what each engine said</h2>
+    </div>
+    <p>
+      On every ticket where the two engines diverged, Jev was right — and each time it
+      reported low confidence while the other engine reported 0.9.
+    </p>
+  </div>
+
+  <div class="bleed" style="margin-top:24px">
+    <div class="cases">
+      <div class="case">
+        <div class="case-id">T-014 · "Refund me, your app lost my work"</div>
+        <p class="case-quote">"Two hours of edits vanished when the editor crashed. I want my money back for this month."</p>
+        <div class="case-calls">
+          <span class="call gold">labelled <b>technical</b></span>
+          <span class="call jev">jev <b>technical</b> <span class="p">0.42</span></span>
+          <span class="call oai">openai <b>billing</b> <span class="p">0.90</span></span>
+        </div>
+      </div>
+      <div class="case">
+        <div class="case-id">T-017 · "Third time asking"</div>
+        <p class="case-quote">"I've asked twice about the duplicate charge and got a template reply both times. I'd like an actual person to look at this."</p>
+        <div class="case-calls">
+          <span class="call gold">labelled <b>escalation</b></span>
+          <span class="call jev">jev <b>escalation</b> <span class="p">0.55</span></span>
+          <span class="call oai">openai <b>billing</b> <span class="p">0.90</span></span>
+        </div>
+      </div>
+      <div class="case">
+        <div class="case-id">T-024 · "Account compromised?"</div>
+        <p class="case-quote">"I got a login alert from a country I've never been to, and there are records in my account I didn't create."</p>
+        <div class="case-calls">
+          <span class="call gold">labelled <b>escalation</b></span>
+          <span class="call jev">jev <b>escalation</b> <span class="p">0.32</span></span>
+          <span class="call oai">openai <b>technical</b> <span class="p">0.90</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">07 · The claim that did not land</span>
+      <h2>Calibration: not demonstrated</h2>
+    </div>
+
+    <p>
+      This is the claim the whole experiment was built around, and the one it failed
+      to confirm. Put three rows side by side:
+    </p>
+
+    <div class="readout">
+      <div class="row"><span class="k">department accuracy</span><span class="v">0.875 → 3 tickets wrong</span></div>
+      <div class="row"><span class="k">abstention rate</span><span class="v">0.083 → 2 tickets gated</span></div>
+      <div class="row"><span class="k">errors caught by gate</span><span class="v">0.000 → no overlap</span></div>
+    </div>
+
+    <p>
+      Jev got three tickets wrong. It abstained on two. They were
+      <em>different</em> tickets. It gated answers it had actually gotten right, and its
+      real errors went through with high confidence. A confidence
+      separation of −0.010 says it plainly: on this set, the number was very slightly
+      <em>anti</em>-correlated with being right.
+    </p>
+
+    <div class="callout" style="border-left-color:var(--rule-firm)">
+      <span class="eyebrow" style="color:var(--ink-3)">Two qualifications, in both directions</span>
+      <p style="margin:0 0 0.9em">
+        <strong>This does not refute the claim.</strong> Three errors is not a sample.
+        A calibration measurement driven by three data points has essentially no
+        statistical power, and both ECE and confidence separation need hundreds of
+        cases to stabilise. The correct reading is "this workload could not test it,"
+        not "the claim is false."
+      </p>
+      <p style="margin:0">
+        <strong>It also isn't nothing.</strong> The gate is precisely the thing you
+        would build on a calibration guarantee, and on this workload it did not work.
+        That's worth knowing before you design around it.
+      </p>
+    </div>
+
+    <div class="callout">
+      <span class="eyebrow">Also don't credit this</span>
+      <p style="margin:0">
+        The calibration column nominally favours <code>gpt-4o-mini</code> (0.150 vs
+        0.199). Ignore it. A predictor that always answers 0.9 scores well on
+        calibration error whenever 0.9 happens to sit near its overall accuracy — which
+        is roughly what happened. Confidence separation is the column that catches
+        that, and at −0.000 it says the number carried no information about correctness
+        at all. Neither engine earned this row.
+      </p>
+    </div>
+
+    <p>
+      So the honest claim is narrow. Jev's confidence <strong>varies</strong> — 0.32,
+      0.42, 0.55 on genuinely ambiguous tickets — where the other engine reported 0.9 on
+      nearly everything. A varying signal is a <em>precondition</em> for the gate to do
+      anything; a pinned one makes it dead code at any threshold. But varying is not the
+      same as useful, and this run does not show the gate working.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">08 · What would settle it</span>
+      <h2>What would settle the open question</h2>
+    </div>
+    <p>
+      The calibration claim needs a workload where the error count is large enough to
+      measure against — a few hundred real tickets, not 24 invented ones. Every
+      accuracy metric here moves in steps of four percentage points; the confidence
+      metrics are worse, driven by however many tickets the engine got wrong.
+    </p>
+    <p>
+      Running the suite twice makes the instability visible: Jev picked the same
+      department on all 24 tickets both times, but <code>needs_human</code> accuracy
+      moved 0.667 → 0.583 and the abstention rate 0.125 → 0.083, purely from
+      probabilities drifting across a fixed threshold. Until the sample is bigger, the
+      speed and cost claims are the ones this repo can vouch for.
+    </p>
+
+    <div class="callout" style="border-left-color:var(--rule-firm)">
+      <span class="eyebrow" style="color:var(--ink-3)">Caveats</span>
+      <p style="margin:0;color:var(--ink-2);font-size:0.95rem">
+        The 24 tickets are invented and the labels are one reviewer's judgment, about a
+        third of them deliberately ambiguous. The policy thresholds are starting points,
+        not validated defaults. Prices are hand-entered list prices and go stale. A
+        third engine, Gemini, ran correctly but exhausted its free-tier quota after 7
+        tickets and was removed rather than reported on a different denominator.
+      </p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <strong style="color:var(--ink-2)">confidence-gate</strong><br>
+    A test of TypeSafe's published claims about Jev, run inside a real LangGraph
+    workflow rather than a demo. Speed and cost hold; calibration is the one this
+    workload could not confirm.<br><br>
+    <code style="background:transparent;padding:0">uv sync --extra dev · uv run agentbench bench</code><br>
+    One run, 24 tickets, two engines, September 2026. Numbers will differ on yours.
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var btn = document.getElementById('themeToggle');
+    var root = document.documentElement;
+    function current() {
+      var explicit = root.getAttribute('data-theme');
+      if (explicit) return explicit;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    try {
+      var saved = localStorage.getItem('cg-theme');
+      if (saved === 'dark' || saved === 'light') root.setAttribute('data-theme', saved);
+    } catch (e) { /* private mode, blocked storage — the page is fine without it */ }
+
+    btn.addEventListener('click', function () {
+      var next = current() === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('cg-theme', next); } catch (e) {}
+    });
+  })();
+</script>
