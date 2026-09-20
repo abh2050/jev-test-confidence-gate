@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Jev vs GPT-4o mini: a 24-ticket LangGraph benchmark of latency, cost, accuracy, and confidence calibration.">
-<title>Confidence Gate</title>
+<title>Jev vs GPT-4o mini for support routing | Confidence Gate</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
@@ -21,9 +21,9 @@
 <header class="masthead" id="top">
   <div class="hero-grid">
     <div class="hero-copy">
-      <div class="hero-kicker"><span></span> THE CONFIDENCE EXPERIMENT <span class="issue">/ SEP 2026</span></div>
-      <h1>Fast is measurable.<br><em>Trust is harder.</em></h1>
-      <p class="lede">Jev promises fast decisions with calibrated confidence. We put it inside a real support workflow to see which claims hold up.</p>
+      <div class="hero-kicker"><span></span> AI SUPPORT ROUTING BENCHMARK <span class="issue">/ SEP 2026</span></div>
+      <h1>AI for customer<br><em>support routing.</em></h1>
+      <p class="lede">We compared TypeSafe’s Jev model with OpenAI’s GPT-4o mini on 24 sample customer support tickets. Each model chose a support team and reported how confident it was. We measured speed, cost, accuracy, and whether low confidence helped identify mistakes.</p>
       <div class="hero-actions"><a class="button primary" href="#results">Explore the results <span>↓</span></a><a class="text-link" href="#architecture">See the architecture ↗</a></div>
       <div class="chips"><span class="chip">24 labeled tickets</span><span class="chip">2 engines</span><span class="chip">1 LangGraph workflow</span></div>
     </div>
@@ -34,16 +34,16 @@
       <div class="mini-row"><span>Jev</span><div><i style="width:14%;background:#a9e6c3"></i></div><b>163 ms</b></div>
       <div class="mini-row"><span>GPT-4o mini</span><div><i style="width:100%;background:#c9b3eb"></i></div><b>1,164 ms</b></div>
       <div class="plate-rule"></div>
-      <div class="plate-bottom"><span>THE OPEN QUESTION</span><strong>Does confidence<br>predict correctness?</strong><a href="#calibration">The gate caught 0 of 3 errors ↗</a></div>
+      <div class="plate-bottom"><span>CONFIDENCE AND HUMAN REVIEW</span><strong>Can the model flag<br>its own mistakes?</strong><a href="#calibration">See how the confidence check performed ↗</a></div>
     </aside>
   </div>
   <div class="stat-strip">
     <div><span class="stat-label">01 / SPEED</span><strong>7.1<span>×</span></strong><p>faster to a routing decision</p></div>
     <div><span class="stat-label">02 / COST</span><strong>6.1<span>×</span></strong><p>cheaper per ticket at list price</p></div>
     <div><span class="stat-label">03 / ACCURACY</span><strong>87.5<span>%</span></strong><p>department accuracy · Jev</p></div>
-    <div class="stat-caution"><span class="stat-label">04 / CALIBRATION</span><strong>0<span> / 3</span></strong><p>routing errors caught by the gate</p></div>
+    <div class="stat-caution"><span class="stat-label">04 / CALIBRATION</span><strong>0<span> / 3</span></strong><p>Jev errors flagged by the confidence check</p></div>
   </div>
-  <p class="sample-note">A small, invented dataset. These are observations from one run, not a general ranking of model performance.</p>
+  <p class="sample-note">The tickets were written for this experiment and labeled by one reviewer. The results describe this small test; performance on customer traffic may differ.</p>
 </header>
 <nav class="section-nav" aria-label="Report sections"><a href="#scorecard">Overview</a><a href="#setup">Method</a><a href="#architecture">Architecture</a><a href="#speed">Speed</a><a href="#results">Results</a><a href="#calibration">Calibration</a></nav>
 <main>
@@ -52,45 +52,47 @@
 <section id="scorecard">
   <div class="bleed">
     <div class="sec-head">
-      <span class="eyebrow">TypeSafe's claims, checked against one real workload</span>
-      <h2>The scorecard</h2>
+      <span class="eyebrow">What we tested and what we found</span>
+      <h2>The results at a glance</h2>
     </div>
+    <p class="section-intro">Jev is TypeSafe’s AI model for tasks such as choosing a category, estimating a score,
+      or answering a yes-or-no question. We tested it in a support application that routes
+      customer messages to billing, technical support, or a team handling escalations.
+      GPT-4o mini performed the same task for comparison.</p>
     <div class="verdicts">
       <div class="verdict">
-        <span class="grade solid">Holds</span>
-        <span class="claim">70–500&nbsp;ms end to end</span>
-        <span class="why">163&nbsp;ms to a routing decision, 430&nbsp;ms p95 end to end — inside the claimed band, over the public internet from a laptop.</span>
+        <span class="grade solid">Faster in this test</span>
+        <span class="claim">Jev completed the workflow in 316 ms</span>
+        <span class="why">GPT-4o mini took 2,273 ms on average. These times include choosing a team, assessing the ticket, and applying the workflow’s rules.</span>
       </div>
       <div class="verdict">
-        <span class="grade solid">Holds</span>
-        <span class="claim">Radically cheaper per decision</span>
-        <span class="why">6.1× cheaper per ticket at list price. Though not for the reason you'd guess — see below.</span>
+        <span class="grade solid">Lower estimated cost</span>
+        <span class="claim">About $0.06 per 1,000 tickets</span>
+        <span class="why">The same workload cost an estimated $0.37 with GPT-4o mini. These estimates use the token counts and prices recorded for the experiment.</span>
       </div>
       <div class="verdict">
-        <span class="grade solid">Holds</span>
-        <span class="claim">Similar intelligence on System One tasks</span>
-        <span class="why">0.875 against 0.750 on departments. Same ballpark, Jev ahead — on a margin of 3 tickets.</span>
+        <span class="grade solid">More correct team choices</span>
+        <span class="claim">Jev matched 21 of 24 labels</span>
+        <span class="why">GPT-4o mini matched 18. The three-ticket difference is small, and both models made mistakes.</span>
       </div>
       <div class="verdict">
-        <span class="grade thin">Can't say</span>
-        <span class="claim">40–200× faster than LLMs</span>
-        <span class="why">7.1× here — but against <code>gpt-4o-mini</code>, a small non-reasoning model. Their figure is against frontier reasoners. Not a contradiction.</span>
+        <span class="grade thin">Comparison has limits</span>
+        <span class="claim">The speedup depends on the other model</span>
+        <span class="why">Jev chose a route 7.1 times faster than GPT-4o mini. This experiment only compares these two models on this support task.</span>
       </div>
       <div class="verdict">
-        <span class="grade thin">Can't say</span>
-        <span class="claim">Type-safe, cannot hallucinate</span>
-        <span class="why">Zero type errors in 48 calls — but OpenAI's strict JSON mode also had zero. This workload can't separate <em>guaranteed</em> from <em>reliable</em>.</span>
+        <span class="grade solid">Valid response formats</span>
+        <span class="claim">Both models returned usable data</span>
+        <span class="why">All 48 responses from each model followed the required structure. A correctly formatted response can still choose the wrong support team.</span>
       </div>
       <div class="verdict">
-        <span class="grade null">Not demonstrated</span>
-        <span class="claim">Calibrated: higher confidence → higher accuracy</span>
-        <span class="why">The gate caught 0 of 3 errors. With 3 errors to work from this is untested at adequate power — not refuted, but not shown.</span>
+        <span class="grade null">Human review missed the errors</span>
+        <span class="claim">Jev’s three wrong choices passed the check</span>
+        <span class="why">The workflow sent two low-confidence tickets for human review. Jev had chosen the correct team for both. All three of its incorrect choices had enough confidence to pass.</span>
       </div>
     </div>
     <p style="margin-top:20px;font-size:0.95rem;color:var(--ink-2);max-width:68ch">
-      The last row is why this repo is named after the gate rather than the model. It
-      is the claim that would change how you build — and the one a 24-ticket workload
-      turns out to be worst at testing.
+      The project is called <strong>Confidence Gate</strong> because it tests a simple routing rule: send a ticket for human review when the model’s confidence falls below 55%. For this rule to help, incorrect answers need to fall below that threshold often enough to be caught.
     </p>
   </div>
 </section>
@@ -98,41 +100,34 @@
 <section id="setup">
   <div class="wrap">
     <div class="sec-head">
-      <span class="eyebrow">01 · The setup</span>
-      <h2>Hold the graph fixed, swap the judgment</h2>
+      <span class="eyebrow">01 · How we compared the models</span>
+      <h2>The same tickets, questions, and rules</h2>
     </div>
     <p>
-      The premise is that a decision layer is a component, not a personality. Every
-      question — its wording, its rubric, its options — is defined once, engine-neutral.
-      Jev compiles those specs into System&nbsp;One primitives; the OpenAI engine compiles
-      the identical specs into a strict JSON schema plus the same rendered rubrics.
-      Nothing about the prompt differs between runs.
+      Each model processed the same 24 tickets. For each ticket, it answered questions about the right support team, urgency, need for human help, refund eligibility, and customer frustration. We compared its answers with labels written by a reviewer.
     </p>
     <p>
-      Everything downstream is ordinary code: thresholds, SLA clocks, refund limits,
-      the legal override. Both engines are judged against the same rules, so the only
-      variable is where the probabilities came from.
+      The application uses LangGraph, a Python library for connecting steps in a workflow. Both models ran through the same steps and the same routing and approval rules. The question wording and evaluation criteria were shared; each model’s adapter converted them into the format its API accepts.
     </p>
   </div>
 
   <div class="bleed" style="margin-top:26px">
     <div class="panel">
       <div class="panel-head">
-        <span class="t">The swap</span>
+        <span class="t">How each model connects to the workflow</span>
         <span class="n">Fig. 1</span>
       </div>
       <div class="mermaid-scroll">
 <pre class="mermaid">
 flowchart TD
-  Q[&quot;questions.py&lt;br/&gt;one neutral spec&quot;]
-  subgraph ENG[&quot;interchangeable&quot;]
+  Q[&quot;Shared questions and ticket&quot;]
+  subgraph ENG[&quot;Run once with each model&quot;]
     direction LR
-    J[&quot;JevEngine&lt;br/&gt;Choice · Noul · Score&quot;]
-    O[&quot;OpenAIEngine&lt;br/&gt;strict JSON schema&quot;]
+    J[&quot;Jev&quot;]
+    O[&quot;GPT-4o mini&quot;]
   end
-  N[&quot;normalized judgment&lt;br/&gt;value + probabilities&quot;]
-  G[&quot;the graph&lt;br/&gt;identical either way&quot;]
-
+  N[&quot;Answers and confidence scores&quot;]
+  G[&quot;Shared routing and approval rules&quot;]
   Q --&gt; J
   Q --&gt; O
   J --&gt; N
@@ -141,9 +136,8 @@ flowchart TD
 </pre>
       </div>
       <p class="panel-caption">
-        An engine implements one method — <code>ask(state, questions)</code> —
-        and returns typed values with probabilities. It never decides what the application does.
-      </p>
+      Each adapter exposes <code>ask(state, questions)</code>. It sends the ticket and questions to its model, then returns answers and confidence scores in a shared format. The rest of the application reads that format.
+    </p>
     </div>
   </div>
 </section>
@@ -151,92 +145,78 @@ flowchart TD
 <section id="architecture">
   <div class="wrap">
     <div class="sec-head">
-      <span class="eyebrow">02 · The system under test</span>
-      <h2>A supervisor and three subgraphs</h2>
+      <span class="eyebrow">02 · How a ticket moves through the application</span>
+      <h2>From a customer message to a support action</h2>
     </div>
     <p>
-      One triage call asks five independent judgments in parallel over the same ticket.
-      A <code>gate</code> node then turns those probabilities into a branch — in plain
-      code, with no model involved — and the ticket enters one of three compiled
-      subgraphs, each attached to the parent as a single node.
+      The first model request assesses the ticket and chooses a support team. The application then checks the confidence score. If the score is below 55%, it sends the ticket to the escalation workflow for human review. It also escalates urgent cases that meet the human-help threshold. Other tickets go to the team the model selected.
     </p>
   </div>
 
   <div class="bleed" style="margin-top:26px">
     <div class="panel">
       <div class="panel-head">
-        <span class="t">Graph topology</span>
+        <span class="t">The ticket workflow</span>
         <span class="n">Fig. 2</span>
       </div>
       <div class="mermaid-scroll">
 <pre class="mermaid">
 flowchart TD
-  S([&quot;start&quot;]) --&gt; T[&quot;triage&lt;br/&gt;5 parallel judgments · 1 request&quot;]
-  T --&gt; GT{&quot;gate&lt;br/&gt;code, not model&quot;}
-
-  GT --&gt;|&quot;confident&quot;| B
-  GT --&gt;|&quot;confident&quot;| TE
-  GT --&gt;|&quot;uncertain → human&quot;| E
-
-  subgraph B[&quot;billing&quot;]
-    direction TB
-    B1[&quot;assess&quot;] --&gt; B2[&quot;decide&lt;br/&gt;refund + approval&quot;]
+  S([&quot;Customer ticket&quot;]) --&gt; T[&quot;Assess the ticket&lt;br/&gt;First model request&quot;]
+  T --&gt; GT{&quot;Apply routing rules&lt;br/&gt;including the confidence check&quot;}
+  GT --&gt;|&quot;Billing&quot;| B
+  GT --&gt;|&quot;Technical&quot;| TE
+  GT --&gt;|&quot;Escalation or human review&quot;| E
+  subgraph B[&quot;Billing workflow&quot;]
+    B1[&quot;Assess the charge&quot;] --&gt; B2[&quot;Choose a refund or response&lt;br/&gt;Apply approval rules&quot;]
   end
-  subgraph TE[&quot;technical&quot;]
-    direction TB
-    T1[&quot;assess&quot;] --&gt; T2[&quot;decide&lt;br/&gt;page on-call?&quot;]
+  subgraph TE[&quot;Technical workflow&quot;]
+    T1[&quot;Assess the problem&quot;] --&gt; T2[&quot;Choose a response&lt;br/&gt;Check whether to alert on-call&quot;]
   end
-  subgraph E[&quot;escalation&quot;]
-    direction TB
-    E1[&quot;assess&quot;] --&gt; E2[&quot;decide&lt;br/&gt;legal override&quot;]
+  subgraph E[&quot;Escalation workflow&quot;]
+    E1[&quot;Assess the risks&quot;] --&gt; E2[&quot;Choose a specialist&lt;br/&gt;Check whether legal review is needed&quot;]
   end
-
-  B2 --&gt; F[&quot;finalize&lt;br/&gt;SLA · usage&quot;]
+  B2 --&gt; F[&quot;Record the proposed action,&lt;br/&gt;response deadline, and API usage&quot;]
   T2 --&gt; F
   E2 --&gt; F
-  F --&gt; D([&quot;end&quot;])
 </pre>
       </div>
       <p class="panel-caption">
-        The gate is the whole experiment in one node. An uncertain department choice is
-        not resolved by guessing — it routes to a human. That only works if the
-        confidence number means something.
-      </p>
+      Each team has its own two-step workflow: a second model request assesses the details, then application rules produce a proposed action. The benchmark records that proposed action, a target response time, and API usage for evaluation.
+    </p>
     </div>
   </div>
 
   <div class="wrap" style="margin-top:34px">
-    <h3>Where the model stops and code starts</h3>
+    <h3>How the application uses the answers</h3>
     <div class="split" style="margin-top:14px">
       <div class="split-row split-head">
-        <div>Judgment — model</div>
-        <div>Decision — code</div>
+        <div>Model answer</div>
+        <div>Application rule</div>
       </div>
       <div class="split-row">
-        <div>department + probabilities</div>
-        <div>which subgraph runs, and whether confidence is high enough to trust it at all</div>
+        <div>Support team and confidence</div>
+        <div>Choose a team’s workflow, or escalate for human review when confidence is below 55%.</div>
       </div>
       <div class="split-row">
-        <div>priority, 0–3 expected score</div>
-        <div>the SLA clock: 72h / 24h / 8h / 1h</div>
+        <div>Urgency score, from 0 to 3</div>
+        <div>Set a target response time: 72, 24, 8, or 1 hour.</div>
       </div>
       <div class="split-row">
-        <div>action + policy_exception</div>
-        <div>the refund amount, and whether a supervisor must approve it</div>
+        <div>Proposed refund and policy exception</div>
+        <div>Calculate the refund and apply approval requirements.</div>
       </div>
       <div class="split-row">
-        <div>severity, data_loss_risk</div>
-        <div>whether to page on-call</div>
+        <div>Severity and risk of data loss</div>
+        <div>Decide whether to alert the on-call team.</div>
       </div>
       <div class="split-row">
-        <div>tier, legal_exposure</div>
-        <div>the legal override, which no weighted score can average away</div>
+        <div>Escalation team and legal risk</div>
+        <div>Route to legal review when the estimated legal risk is at least 50%.</div>
       </div>
     </div>
     <p style="margin-top:16px;font-size:0.95rem;color:var(--ink-2)">
-      Two consequences. Changing the refund limit doesn't re-run inference — the
-      judgments are unchanged, only the policy reading them. And the model is never
-      asked what to <em>do</em>, only to describe the situation.
+      For example, a proposed refund above $200 requires supervisor approval. That limit is set in the application and applies to both models. Keeping these rules consistent lets us compare how the models’ answers affect the outcome.
     </p>
   </div>
 </section>
@@ -244,26 +224,22 @@ flowchart TD
 <section id="speed">
   <div class="wrap">
     <div class="sec-head">
-      <span class="eyebrow">03 · The claim that holds</span>
-      <h2>Time to decision</h2>
+      <span class="eyebrow">03 · Speed</span>
+      <h2>How long routing took</h2>
     </div>
     <div class="headline-stat">
       <span class="figure">7.1×</span>
-      <span class="unit">faster to a routing decision<br>163&nbsp;ms vs 1164&nbsp;ms, mean of 24 tickets</span>
+      <span class="unit">faster to a routing decision<br>163&nbsp;ms vs 1,164&nbsp;ms, averaged over 24 tickets</span>
     </div>
     <p style="margin-top:22px">
-      Both engines make exactly two requests per ticket and ask exactly the same
-      questions. The difference is what comes back: typed judgments return a short
-      structured answer, where prompt-and-parse has to emit a JSON object token by
-      token. Five parallel questions cost one response either way — the responses just
-      aren't the same size.
+      We measured two intervals. <strong>Time to decision</strong> starts when a ticket enters the application and ends when the routing rules choose its destination. <strong>End-to-end time</strong> also includes the team’s assessment and the final proposed action. Each model made two API requests per ticket.
     </p>
   </div>
 
   <div class="bleed" style="margin-top:26px">
     <div class="chart">
-      <div class="chart-title">Latency, milliseconds</div>
-      <div class="chart-sub">Lower is better · 24 tickets · shared scale</div>
+      <div class="chart-title">Processing time in milliseconds</div>
+      <div class="chart-sub">Shorter bars mean faster processing · same scale for both models</div>
 
       <div class="legend">
         <span><i style="background:var(--jev)"></i> jev-latest</span>
@@ -271,7 +247,7 @@ flowchart TD
       </div>
 
       <div class="bar-group">
-        <div class="bar-group-label">Time to decision — start until the ticket has somewhere to go</div>
+        <div class="bar-group-label">Average time to choose a route</div>
         <div class="bar-row" title="jev-latest — time to decision: 163.3 ms">
           <span class="bar-name">jev</span>
           <span class="bar-track">
@@ -289,7 +265,7 @@ flowchart TD
       </div>
 
       <div class="bar-group">
-        <div class="bar-group-label">End to end, p95 — including the subgraph's own call</div>
+        <div class="bar-group-label">95th-percentile time to complete the workflow</div>
         <div class="bar-row" title="jev-latest — end-to-end p95: 429.8 ms">
           <span class="bar-name">jev</span>
           <span class="bar-track">
@@ -314,22 +290,15 @@ flowchart TD
       </div>
 
       <p class="table-note">
-        Graph overhead was 3.7&nbsp;ms and 3.6&nbsp;ms respectively — which is the number
-        that makes the rest of this page worth reading. The harness is not what's being
-        measured.
-      </p>
+      The application itself added an average of 3.7 ms with Jev and 3.6 ms with GPT-4o mini. Most of the measured time was spent waiting for the model APIs.
+    </p>
     </div>
   </div>
 
   <div class="wrap" style="margin-top:38px">
-    <h3>One caveat on the multiple</h3>
+    <h3>What these timings cover</h3>
     <p style="font-size:0.95rem;color:var(--ink-2)">
-      TypeSafe claims 40–200×. This run shows 7.1×, and that is not a contradiction —
-      it's a comparator choice. <code>gpt-4o-mini</code> is a small, non-reasoning
-      model, about the fastest thing you could put on the other side of this
-      comparison. Their multiples are measured against frontier reasoning models. The
-      absolute number is the one to trust here: <strong>163&nbsp;ms</strong>, inside
-      their claimed 70–500&nbsp;ms band.
+      Jev chose a route in 163 ms on average, compared with 1,164 ms for GPT-4o mini. The complete workflow averaged 316 ms and 2,273 ms respectively. These measurements include network time from the machine running the test, so timings may change with location, service load, and ticket content.
     </p>
   </div>
 </section>
@@ -337,8 +306,8 @@ flowchart TD
 <section id="cost">
   <div class="wrap">
     <div class="sec-head">
-      <span class="eyebrow">04 · The claim that holds for a surprising reason</span>
-      <h2>Cost, and where the saving actually comes from</h2>
+      <span class="eyebrow">04 · Estimated API cost</span>
+      <h2>What processing the tickets cost</h2>
     </div>
     <div class="headline-stat">
       <span class="figure">6.1×</span>
@@ -346,20 +315,16 @@ flowchart TD
     </div>
 
     <p style="margin-top:22px">
-      The obvious story would be that parallel sampling means Jev emits far fewer
-      output tokens. It doesn't. <strong>The output token counts were nearly
-      identical</strong> — 4,573 against 4,487 across the same 48 requests.
+      Using the prices recorded for this experiment, all 24 tickets cost about $0.00144 with Jev and $0.00880 with GPT-4o mini. Scaling those totals to 1,000 tickets gives about $0.06 and $0.37. These are estimates based on API token usage.
     </p>
     <p>
-      The saving is on the price sheet, not the volume: output billed at zero, and
-      input at $0.042/MTok against $0.15. If you were expecting the architecture to
-      show up as a smaller response, it doesn't. It shows up on the invoice.
+      Tokens are the units the APIs use to measure input and output. The calculation prices Jev input at $0.042 per million tokens and output at zero. For GPT-4o mini, it uses $0.15 for input and $0.60 for output. Jev used fewer input tokens, while output counts were similar: 4,573 for Jev and 4,487 for GPT-4o mini. The different prices account for much of the cost gap.
     </p>
 
     <div class="readout" style="border-left-color:var(--rule-firm)">
-      <div class="row"><span class="k">jev · 34,226 in + 4,573 out</span><span class="v">$0.00144</span></div>
-      <div class="row"><span class="k">openai · 40,750 in + 4,487 out</span><span class="v">$0.00880</span></div>
-      <div class="row"><span class="k">list prices, hand-entered</span><span class="v">see pricing.py</span></div>
+      <div class="row"><span class="k">Jev · total for 24 tickets</span><span class="v">$0.00144</span></div>
+      <div class="row"><span class="k">GPT-4o mini · total for 24 tickets</span><span class="v">$0.00880</span></div>
+      <div class="row"><span class="k">Prices recorded in the repository</span><span class="v"><a href="https://github.com/abh2050/jev-test-confidence-gate/blob/main/src/agentbench/pricing.py">pricing.py ↗</a></span></div>
     </div>
   </div>
 </section>
@@ -367,9 +332,11 @@ flowchart TD
 <section id="results">
   <div class="bleed">
     <div class="sec-head">
-      <span class="eyebrow">05 · Everything measured</span>
+      <span class="eyebrow">05 · Detailed measurements</span>
       <h2>Full results</h2>
     </div>
+    <p class="section-intro">Both columns cover the same 24 tickets. An upward arrow means a higher value is better;
+      a downward arrow means a lower value is better. The definitions below explain the less familiar measures.</p>
     <div class="table-scroll">
       <table>
         <thead>
@@ -387,17 +354,17 @@ flowchart TD
             <td>0.750</td>
           </tr>
           <tr>
-            <td>Priority MAE ↓</td>
+            <td>Average urgency error ↓</td>
             <td class="win win-jev">0.549</td>
             <td>0.646</td>
           </tr>
           <tr>
-            <td>needs_human accuracy ↑</td>
+            <td>Human-help classification accuracy ↑</td>
             <td>0.583</td>
             <td class="win win-oai">0.750</td>
           </tr>
 
-          <tr class="group-head"><td colspan="3">Does the confidence mean anything?</td></tr>
+          <tr class="group-head"><td colspan="3">Confidence and human review</td></tr>
           <tr class="muted">
             <td>Calibration error ↓</td>
             <td>0.199</td>
@@ -409,12 +376,12 @@ flowchart TD
             <td>−0.000</td>
           </tr>
           <tr>
-            <td>Abstention rate</td>
+            <td>Share sent for low-confidence review</td>
             <td>0.083</td>
             <td>0.000</td>
           </tr>
           <tr class="muted">
-            <td>Errors caught by gate ↑</td>
+            <td>Share of errors flagged by confidence check ↑</td>
             <td>0.000</td>
             <td>0.000</td>
           </tr>
@@ -441,12 +408,12 @@ flowchart TD
             <td>2996.1 ms</td>
           </tr>
           <tr class="muted">
-            <td>— of which engine</td>
+            <td>Average time in model API calls</td>
             <td>312.4 ms</td>
             <td>2269.6 ms</td>
           </tr>
           <tr class="muted">
-            <td>— of which graph</td>
+            <td>Average application overhead</td>
             <td>3.7 ms</td>
             <td>3.6 ms</td>
           </tr>
@@ -463,7 +430,7 @@ flowchart TD
             <td>4,487</td>
           </tr>
           <tr>
-            <td>Cost / 1k tickets ↓</td>
+            <td>Estimated cost per 1,000 tickets ↓</td>
             <td class="win win-jev">$0.060</td>
             <td>$0.367</td>
           </tr>
@@ -476,22 +443,30 @@ flowchart TD
       </table>
     </div>
     <p class="table-note">
-      Greyed rows are the ones this sample cannot support — see below. The two engines
-      agreed on 88% of departments and 88% of final routes.
+      The models chose the same department for 21 of the 24 tickets (about 88%). Values such as 0.875 are proportions: 0.875 means 87.5%. Confidence measurements are especially sensitive to this small sample.
     </p>
+  </div>
+  <div class="wrap metric-definitions" style="margin-top:30px">
+    <h3>How to read the measurements</h3>
+    <dl>
+      <dt>Department accuracy</dt><dd>The share of tickets where the chosen team matches the reviewer’s label, measured before the confidence check changes the route.</dd>
+      <dt>Average urgency error</dt><dd>The average distance between the model’s urgency score and the reviewer’s score on a 0–3 scale. A value of 0.549 means the scores differed by about half a level.</dd>
+      <dt>Human-help classification accuracy</dt><dd>How often the application agrees with the reviewer about whether a person is needed. It treats a model probability of 65% or more as a yes.</dd>
+      <dt>Calibration error</dt><dd>Predictions are grouped by confidence. For each group, we compare average confidence with the share of correct answers. The reported value is the weighted average of those gaps.</dd>
+      <dt>Confidence separation</dt><dd>Average confidence on correct answers minus average confidence on incorrect answers. A positive value means correct answers received higher confidence on average.</dd>
+      <dt>Low-confidence review and errors flagged</dt><dd>The review rate counts all tickets sent for review because confidence was below 55%. The errors-flagged rate counts how many incorrect department choices were among those tickets.</dd>
+      <dt>Mean and p95</dt><dd>The mean is the average time. The 95th percentile, or p95, describes the slower end of the run: roughly 95% of tickets finished within that time.</dd>
+    </dl>
   </div>
 </section>
 
 <section id="disagreements">
   <div class="wrap">
     <div class="sec-head">
-      <span class="eyebrow">06 · Where they disagreed</span>
-      <h2>Three tickets, and what each engine said</h2>
+      <span class="eyebrow">06 · Examples from the dataset</span>
+      <h2>When the models chose different teams</h2>
     </div>
-    <p>
-      On every ticket where the two engines diverged, Jev was right — and each time it
-      reported low confidence while the other engine reported 0.9.
-    </p>
+    <p>The models chose different departments on three tickets. Jev matched the reviewer’s label in each case. The percentages below are the models’ confidence in their chosen department. These examples show why a request can be difficult to route: a customer may ask for a refund while describing a technical problem.</p>
   </div>
 
   <div class="bleed" style="margin-top:24px">
@@ -500,27 +475,27 @@ flowchart TD
         <div class="case-id">T-014 · "Refund me, your app lost my work"</div>
         <p class="case-quote">"Two hours of edits vanished when the editor crashed. I want my money back for this month."</p>
         <div class="case-calls">
-          <span class="call gold">labelled <b>technical</b></span>
-          <span class="call jev">jev <b>technical</b> <span class="p">0.42</span></span>
-          <span class="call oai">openai <b>billing</b> <span class="p">0.90</span></span>
+          <span class="call gold">Reviewer: <b>technical</b></span>
+          <span class="call jev">Jev: <b>technical</b> <span class="p">42% confidence</span></span>
+          <span class="call oai">GPT-4o mini: <b>billing</b> <span class="p">90% confidence</span></span>
         </div>
       </div>
       <div class="case">
         <div class="case-id">T-017 · "Third time asking"</div>
         <p class="case-quote">"I've asked twice about the duplicate charge and got a template reply both times. I'd like an actual person to look at this."</p>
         <div class="case-calls">
-          <span class="call gold">labelled <b>escalation</b></span>
-          <span class="call jev">jev <b>escalation</b> <span class="p">0.55</span></span>
-          <span class="call oai">openai <b>billing</b> <span class="p">0.90</span></span>
+          <span class="call gold">Reviewer: <b>escalation</b></span>
+          <span class="call jev">Jev: <b>escalation</b> <span class="p">55% confidence</span></span>
+          <span class="call oai">GPT-4o mini: <b>billing</b> <span class="p">90% confidence</span></span>
         </div>
       </div>
       <div class="case">
         <div class="case-id">T-024 · "Account compromised?"</div>
         <p class="case-quote">"I got a login alert from a country I've never been to, and there are records in my account I didn't create."</p>
         <div class="case-calls">
-          <span class="call gold">labelled <b>escalation</b></span>
-          <span class="call jev">jev <b>escalation</b> <span class="p">0.32</span></span>
-          <span class="call oai">openai <b>technical</b> <span class="p">0.90</span></span>
+          <span class="call gold">Reviewer: <b>escalation</b></span>
+          <span class="call jev">Jev: <b>escalation</b> <span class="p">32% confidence</span></span>
+          <span class="call oai">GPT-4o mini: <b>technical</b> <span class="p">90% confidence</span></span>
         </div>
       </div>
     </div>
@@ -530,63 +505,43 @@ flowchart TD
 <section id="calibration">
   <div class="wrap">
     <div class="sec-head">
-      <span class="eyebrow">07 · The claim that did not land</span>
-      <h2>Calibration: not demonstrated</h2>
+      <span class="eyebrow">07 · Confidence and mistakes</span>
+      <h2>Did confidence help identify wrong answers?</h2>
     </div>
 
     <p>
-      This is the claim the whole experiment was built around, and the one it failed
-      to confirm. Put three rows side by side:
+      A model is <strong>calibrated</strong> when its confidence matches how often it is right. For example, among many answers given with 80% confidence, about 80% should be correct. A support application could use confidence to decide which tickets need a person to check the routing. Here is what happened with Jev in this test.
     </p>
 
     <div class="readout">
-      <div class="row"><span class="k">department accuracy</span><span class="v">0.875 → 3 tickets wrong</span></div>
-      <div class="row"><span class="k">abstention rate</span><span class="v">0.083 → 2 tickets gated</span></div>
-      <div class="row"><span class="k">errors caught by gate</span><span class="v">0.000 → no overlap</span></div>
+      <div class="row"><span class="k">Wrong department choices</span><span class="v">3 of 24 tickets</span></div>
+      <div class="row"><span class="k">Sent for low-confidence review</span><span class="v">2 of 24 tickets</span></div>
+      <div class="row"><span class="k">Wrong choices flagged for review</span><span class="v">0 of 3 errors</span></div>
     </div>
 
     <p>
-      Jev got three tickets wrong. It abstained on two. They were
-      <em>different</em> tickets. It gated answers it had actually gotten right, and its
-      real errors went through with high confidence. A confidence
-      separation of −0.010 says it plainly: on this set, the number was very slightly
-      <em>anti</em>-correlated with being right.
+      Jev chose the wrong department for three tickets. The confidence check sent two tickets for human review, but both had correct department choices. All three incorrect choices scored at least 55% confidence and passed the check. At the threshold used here, the check caught none of Jev’s routing mistakes.
     </p>
 
     <div class="callout" style="border-left-color:var(--rule-firm)">
-      <span class="eyebrow" style="color:var(--ink-3)">Two qualifications, in both directions</span>
+      <span class="eyebrow" style="color:var(--ink-3)">What the small sample can tell us</span>
       <p style="margin:0 0 0.9em">
-        <strong>This does not refute the claim.</strong> Three errors is not a sample.
-        A calibration measurement driven by three data points has essentially no
-        statistical power, and both ECE and confidence separation need hundreds of
-        cases to stabilise. The correct reading is "this workload could not test it,"
-        not "the claim is false."
-      </p>
+      There were only 24 tickets and three incorrect Jev answers. That gives us little evidence about how its confidence behaves across a wider range of mistakes. A larger dataset is needed to estimate calibration reliably and choose a useful review threshold.
+    </p>
       <p style="margin:0">
-        <strong>It also isn't nothing.</strong> The gate is precisely the thing you
-        would build on a calibration guarantee, and on this workload it did not work.
-        That's worth knowing before you design around it.
-      </p>
+      For this run, the practical result is clear: two correct department choices were flagged for review, and three incorrect choices passed. Anyone using this approach would need to measure both the mistakes caught and the extra review work on their own tickets.
+    </p>
     </div>
 
     <div class="callout">
-      <span class="eyebrow">Also don't credit this</span>
+      <span class="eyebrow">Comparing the models’ confidence scores</span>
       <p style="margin:0">
-        The calibration column nominally favours <code>gpt-4o-mini</code> (0.150 vs
-        0.199). Ignore it. A predictor that always answers 0.9 scores well on
-        calibration error whenever 0.9 happens to sit near its overall accuracy — which
-        is roughly what happened. Confidence separation is the column that catches
-        that, and at −0.000 it says the number carried no information about correctness
-        at all. Neither engine earned this row.
-      </p>
+      GPT-4o mini had a lower calibration error: 0.150, compared with Jev’s 0.199. It also reported about 90% confidence on nearly every ticket. A nearly constant score gives the application little help in choosing which individual answers to review, even when its average calibration error is lower.
+    </p>
     </div>
 
     <p>
-      So the honest claim is narrow. Jev's confidence <strong>varies</strong> — 0.32,
-      0.42, 0.55 on genuinely ambiguous tickets — where the other engine reported 0.9 on
-      nearly everything. A varying signal is a <em>precondition</em> for the gate to do
-      anything; a pinned one makes it dead code at any threshold. But varying is not the
-      same as useful, and this run does not show the gate working.
+      Jev gave a wider range of confidence scores, including 32%, 42%, and 55% on the examples above. Across the whole dataset, however, its average confidence on correct answers was 0.010 lower than on incorrect answers. GPT-4o mini’s difference was approximately zero. Neither model showed a useful average separation in this run.
     </p>
   </div>
 </section>
@@ -594,32 +549,21 @@ flowchart TD
 <section id="next">
   <div class="wrap">
     <div class="sec-head">
-      <span class="eyebrow">08 · What would settle it</span>
-      <h2>What would settle the open question</h2>
+      <span class="eyebrow">08 · Next steps and limitations</span>
+      <h2>Test the review rule on more tickets</h2>
     </div>
     <p>
-      The calibration claim needs a workload where the error count is large enough to
-      measure against — a few hundred real tickets, not 24 invented ones. Every
-      accuracy metric here moves in steps of four percentage points; the confidence
-      metrics are worse, driven by however many tickets the engine got wrong.
+      The next step is to evaluate a larger set of representative customer tickets, with reviewed labels and enough incorrect answers to study confidence. The review threshold should be chosen on a separate development set, then evaluated on new tickets. That would show how many mistakes it catches and how much work it sends to people.
     </p>
     <p>
-      Running the suite twice makes the instability visible: Jev picked the same
-      department on all 24 tickets both times, but <code>needs_human</code> accuracy
-      moved 0.667 → 0.583 and the abstention rate 0.125 → 0.083, purely from
-      probabilities drifting across a fixed threshold. Until the sample is bigger, the
-      speed and cost claims are the ones this repo can vouch for.
+      On a set of 24 tickets, one answer changes accuracy by about four percentage points. Repeat runs can also change which scores cross a threshold. Across two runs, Jev chose the same departments, while human-help classification accuracy changed from 66.7% to 58.3% and the low-confidence review rate changed from 12.5% to 8.3%.
     </p>
 
     <div class="callout" style="border-left-color:var(--rule-firm)">
-      <span class="eyebrow" style="color:var(--ink-3)">Caveats</span>
+      <span class="eyebrow" style="color:var(--ink-3)">Limits of this experiment</span>
       <p style="margin:0;color:var(--ink-2);font-size:0.95rem">
-        The 24 tickets are invented and the labels are one reviewer's judgment, about a
-        third of them deliberately ambiguous. The policy thresholds are starting points,
-        not validated defaults. Prices are hand-entered list prices and go stale. A
-        third engine, Gemini, ran correctly but exhausted its free-tier quota after 7
-        tickets and was removed rather than reported on a different denominator.
-      </p>
+      The tickets were invented for this experiment, and one reviewer assigned the labels. About a third were deliberately ambiguous. The routing and approval thresholds need evaluation for any intended use. Cost estimates use manually recorded prices, and timings include network conditions during the run. Gemini was also attempted, but its free-tier quota ran out after seven tickets, so it is excluded from this 24-ticket comparison.
+    </p>
     </div>
   </div>
 </section>
@@ -627,12 +571,10 @@ flowchart TD
 </main>
 <footer>
   <div class="wrap">
-    <strong style="color:var(--ink-2)">confidence-gate</strong><br>
-    A test of TypeSafe's published claims about Jev, run inside a real LangGraph
-    workflow rather than a demo. Speed and cost hold; calibration is the one this
-    workload could not confirm.<br><br>
-    <code style="background:transparent;padding:0">uv sync --extra dev · uv run agentbench bench</code><br>
-    One run, 24 tickets, two engines, September 2026. Numbers will differ on yours.
+    <strong style="color:var(--ink-2)">Confidence Gate · September 2026</strong>
+    <p>A comparison of Jev and GPT-4o mini for routing customer support tickets.
+      The repository includes the sample tickets, model adapters, workflow rules, and benchmark code.</p>
+    <p><a href="https://github.com/abh2050/jev-test-confidence-gate#quick-start">Run the experiment yourself ↗</a></p>
   </div>
 </footer>
 

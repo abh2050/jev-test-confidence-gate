@@ -78,8 +78,8 @@
         rendered.setAttribute(
           "aria-label",
           index === 0
-            ? "Shared questions flow through either Jev or OpenAI into normalized judgments and the same graph."
-            : "Triage flows through a confidence gate into billing, technical, or escalation subgraphs, then finalizes.",
+            ? "The same ticket and questions go to Jev and GPT-4o mini. Both models return answers and confidence scores to shared application rules."
+            : "The application assesses a ticket, checks its confidence, and routes it to billing, technical support, or escalation. Each workflow records a proposed action and response deadline.",
         );
       } catch (error) {
         element.textContent = source;

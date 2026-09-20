@@ -975,3 +975,19 @@ footer {
     transition: none !important;
   }
 }
+
+/* Explanations accompanying the report's measurements. */
+.section-intro {
+  max-width: 76ch;
+  margin-bottom: 28px;
+  color: var(--ink-2);
+}
+.metric-definitions dt {
+  font-weight: 600;
+  margin-top: 22px;
+}
+.metric-definitions dd {
+  margin: 6px 0 0;
+  color: var(--ink-2);
+  font-size: 15px;
+}
